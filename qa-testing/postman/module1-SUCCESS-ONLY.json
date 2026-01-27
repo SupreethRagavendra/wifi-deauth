@@ -1,0 +1,221 @@
+{
+    "info": {
+        "name": "Module 1 - Performance Test (Success Only)",
+        "description": "Performance testing collection with ONLY success-path tests. Validation tests removed to avoid false-positive error rates.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Register Admin - Success",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "var uniqueId = Date.now() + '' + Math.floor(Math.random() * 1000000) + '' + (pm.info.iteration || 0);",
+                            "pm.variables.set('uniqueAdminEmail', 'admin' + uniqueId + '@test.com');",
+                            "pm.variables.set('uniqueInstitute', 'Institute ' + uniqueId);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Registration successful', function () {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                            "});",
+                            "",
+                            "if (pm.response.code === 201) {",
+                            "    var jsonData = pm.response.json();",
+                            "    if (jsonData.instituteCode) {",
+                            "        pm.collectionVariables.set('instituteCode', jsonData.instituteCode);",
+                            "    }",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"instituteName\": \"{{uniqueInstitute}}\",\n    \"instituteType\": \"COLLEGE\",\n    \"location\": \"Test Location\",\n    \"adminName\": \"Test Admin\",\n    \"email\": \"{{uniqueAdminEmail}}\",\n    \"password\": \"TestPass@123\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/auth/register/admin",
+                    "host": [
+                        "http://localhost:8080"
+                    ],
+                    "path": [
+                        "api",
+                        "auth",
+                        "register",
+                        "admin"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "2. Register Home User - Success",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "var uniqueId = Date.now() + '' + Math.floor(Math.random() * 1000000) + '' + (pm.info.iteration || 0);",
+                            "pm.variables.set('uniqueHomeEmail', 'home' + uniqueId + '@test.com');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Registration successful', function () {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                            "});",
+                            "",
+                            "if (pm.response.code === 201) {",
+                            "    pm.test('Has token', function () {",
+                            "        var jsonData = pm.response.json();",
+                            "        pm.expect(jsonData).to.have.property('token');",
+                            "    });",
+                            "    pm.test('Role is HOME_USER', function () {",
+                            "        var jsonData = pm.response.json();",
+                            "        pm.expect(jsonData.role).to.equal('HOME_USER');",
+                            "    });",
+                            "}"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Home User Test\",\n    \"email\": \"{{uniqueHomeEmail}}\",\n    \"password\": \"TestPass@123\",\n    \"networkName\": \"My Home Network\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/auth/register/home",
+                    "host": [
+                        "http://localhost:8080"
+                    ],
+                    "path": [
+                        "api",
+                        "auth",
+                        "register",
+                        "home"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "3. Verify Institute Code",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('Verification successful', function () {",
+                            "    pm.expect(pm.response.code).to.equal(200);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"instituteCode\": \"TESTCODE123\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/auth/verify-institute-code",
+                    "host": [
+                        "http://localhost:8080"
+                    ],
+                    "path": [
+                        "api",
+                        "auth",
+                        "verify-institute-code"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "4. Create and Login User",
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "exec": [
+                            "var uniqueId = Date.now() + '' + Math.floor(Math.random() * 1000000);",
+                            "pm.variables.set('loginTestEmail', 'login' + uniqueId + '@test.com');"
+                        ],
+                        "type": "text/javascript"
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "pm.test('User created for login test', function () {",
+                            "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                            "});"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Login Test User\",\n    \"email\": \"{{loginTestEmail}}\",\n    \"password\": \"TestPass@123\",\n    \"networkName\": \"Test Network\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:8080/api/auth/register/home",
+                    "host": [
+                        "http://localhost:8080"
+                    ],
+                    "path": [
+                        "api",
+                        "auth",
+                        "register",
+                        "home"
+                    ]
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Variables for theming */
+:root {
+    --royal-blue: #2563eb;
+    --royal-blue-dark: #1d4ed8;
+    --light-blue-pattern: rgba(255, 255, 255, 0.12);
+    --data-point-blue: #93c5fd;
+}
+
+/* Base styles */
+@layer base {
+    * {
+        @apply box-border;
+    }
+
+    html {
+        @apply scroll-smooth;
+    }
+
+    body {
+        @apply bg-slate-100 text-slate-900 font-sans antialiased;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Headings */
+    h1 {
+        @apply text-h1 font-display text-slate-900;
+    }
+
+    h2 {
+        @apply text-h2 font-display text-slate-900;
+    }
+
+    h3 {
+        @apply text-h3 text-slate-900;
+    }
+
+    h4 {
+        @apply text-h4 text-slate-900;
+    }
+
+    /* Focus visible for accessibility */
+    :focus-visible {
+        @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-white;
+    }
+
+    /* Remove autofill background - Light theme */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #0f172a;
+        -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset;
+        transition: background-color 5000s ease-in-out 0s;
+    }
+}
+
+/* Component styles */
+@layer components {
+
+    /* Skip to main content link for accessibility */
+    .skip-link {
+        @apply absolute left-4 top-4 z-50 -translate-y-16 rounded-button bg-primary px-4 py-2 text-white transition-transform focus:translate-y-0;
+    }
+
+    /* Tech gradient for left panel */
+    .tech-gradient {
+        background: linear-gradient(135deg, var(--royal-blue) 0%, var(--royal-blue-dark) 100%);
+    }
+
+    /* Circuit pattern overlay */
+    .circuit-pattern {
+        background-image:
+            radial-gradient(var(--light-blue-pattern) 1px, transparent 0),
+            linear-gradient(90deg, var(--light-blue-pattern) 1px, transparent 0),
+            linear-gradient(0deg, var(--light-blue-pattern) 1px, transparent 0);
+        background-size: 40px 40px, 40px 40px, 40px 40px;
+        opacity: 0.6;
+    }
+
+    /* Data points */
+    .data-point {
+        width: 4px;
+        height: 4px;
+        background-color: var(--data-point-blue);
+        position: absolute;
+        border-radius: 50%;
+    }
+
+    /* Shield glow effect */
+    .shield-glow {
+        filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2));
+    }
+
+    /* Mono label style */
+    .mono-label {
+        @apply font-mono uppercase tracking-[0.2em] text-[11px] font-semibold;
+    }
+
+    /* Custom scrollbar for dark theme */
+    .custom-scrollbar::-webkit-scrollbar {
+        @apply w-2;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        @apply bg-slate-100 rounded-full;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-slate-300 rounded-full hover:bg-slate-400;
+    }
+
+    /* Gradient text */
+    .gradient-text {
+        @apply bg-gradient-royal bg-clip-text text-transparent;
+    }
+
+    /* Input light theme styling */
+    .input-light {
+        @apply w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-input;
+        @apply focus:ring-1 focus:ring-primary focus:border-primary focus:bg-white;
+        @apply transition-all placeholder:text-slate-400 text-sm text-slate-900;
+    }
+
+    /* Button blue */
+    .btn-blue {
+        @apply w-full bg-primary hover:bg-primary-dark text-white py-4 rounded-input;
+        @apply font-bold flex items-center justify-center gap-3;
+        @apply transition-all shadow-button-blue hover:shadow-button-blue-hover;
+        @apply active:scale-[0.98] uppercase tracking-widest text-sm font-mono;
+    }
+
+    /* Glow effects */
+    .glow-primary {
+        box-shadow: 0 0 32px rgba(37, 99, 235, 0.4);
+    }
+
+    .glow-success {
+        box-shadow: 0 0 16px rgba(5, 205, 153, 0.3);
+    }
+
+    .glow-danger {
+        box-shadow: 0 0 24px rgba(255, 91, 91, 0.3);
+    }
+}
+
+/* Utility styles */
+@layer utilities {
+
+    /* Animation utilities */
+    .transition-hover {
+        @apply transition-all duration-hover ease-out;
+    }
+
+    .transition-focus {
+        @apply transition-all duration-focus ease-out;
+    }
+
+    .transition-form {
+        @apply transition-all duration-form ease-out;
+    }
+
+    /* Safe area utilities for mobile */
+    .safe-area-top {
+        padding-top: env(safe-area-inset-top);
+    }
+
+    .safe-area-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Letter spacing utilities */
+    .tracking-widest-2 {
+        letter-spacing: 0.2em;
+    }
+}

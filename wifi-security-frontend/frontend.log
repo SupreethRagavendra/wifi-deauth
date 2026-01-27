@@ -1,0 +1,1381 @@
+
+> wifi-security-frontend@0.1.0 start
+> react-scripts start
+
+(node:64154) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:64154) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+Starting the development server...
+
+Compiled successfully!
+
+You can now view wifi-security-frontend in the browser.
+
+  Local:            http://localhost:3000
+  On Your Network:  http://10.163.142.1:3000
+
+Note that the development build is not optimized.
+To create a production build, use npm run build.
+
+webpack compiled successfully
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+No issues found.
+Compiling...
+Failed to compile.
+
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+webpack compiled with 1 error
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+Compiling...
+Failed to compile.
+
+Module not found: Error: Can't resolve './index.css' in '/home/supreeth/wif-deauth/wifi-security-frontend/src'
+ERROR in ./src/App.tsx 10:0-21
+Module not found: Error: Can't resolve './index.css' in '/home/supreeth/wif-deauth/wifi-security-frontend/src'
+
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 83:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 92:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 104:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 164:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 174:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 190:48-54
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 199:37-43
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 96:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 129:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 171:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 180:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 192:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 252:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 269:48-54
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 278:37-43
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteCodeSuccess.tsx 185:41-47
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 100:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 114:52-57
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 124:50-56
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 133:39-45
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 157:36-41
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 214:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 223:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 235:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 295:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 312:38-44
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 324:37-43
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 3:0-34
+Module not found: Error: Can't resolve './Button' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 4:0-32
+Module not found: Error: Can't resolve './Input' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 6:0-32
+Module not found: Error: Can't resolve './Alert' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/index.tsx 6:0-21
+Module not found: Error: Can't resolve './index.css' in '/home/supreeth/wif-deauth/wifi-security-frontend/src'
+
+ERROR in ./src/pages/AdminDashboard.tsx 73:43-49
+export 'Button' (imported as 'Button') was not found in '../components/ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/HomeDashboard.tsx 73:43-49
+export 'Button' (imported as 'Button') was not found in '../components/ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 159:45-50
+export 'Alert' (imported as 'Alert') was not found in '../components/ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/ViewerDashboard.tsx 73:43-49
+export 'Button' (imported as 'Button') was not found in '../components/ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 42 errors
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/components/layout/index.ts:2:27
+TS2307: Cannot find module './InfoPanel' or its corresponding type declarations.
+    1 | export { AuthLayout } from './AuthLayout';
+  > 2 | export { InfoPanel } from './InfoPanel';
+      |                           ^^^^^^^^^^^^^
+    3 |
+
+ERROR in src/components/ui/index.ts:1:24
+TS2307: Cannot find module './Button' or its corresponding type declarations.
+  > 1 | export { Button } from './Button';
+      |                        ^^^^^^^^^^
+    2 | export type { ButtonProps } from './Button';
+    3 |
+    4 | export { Input } from './Input';
+
+ERROR in src/components/ui/index.ts:2:34
+TS2307: Cannot find module './Button' or its corresponding type declarations.
+    1 | export { Button } from './Button';
+  > 2 | export type { ButtonProps } from './Button';
+      |                                  ^^^^^^^^^^
+    3 |
+    4 | export { Input } from './Input';
+    5 | export type { InputProps } from './Input';
+
+ERROR in src/components/ui/index.ts:4:23
+TS2307: Cannot find module './Input' or its corresponding type declarations.
+    2 | export type { ButtonProps } from './Button';
+    3 |
+  > 4 | export { Input } from './Input';
+      |                       ^^^^^^^^^
+    5 | export type { InputProps } from './Input';
+    6 |
+    7 | export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
+
+ERROR in src/components/ui/index.ts:5:33
+TS2307: Cannot find module './Input' or its corresponding type declarations.
+    3 |
+    4 | export { Input } from './Input';
+  > 5 | export type { InputProps } from './Input';
+      |                                 ^^^^^^^^^
+    6 |
+    7 | export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
+    8 | export type { CardProps } from './Card';
+
+ERROR in src/components/ui/index.ts:10:23
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     8 | export type { CardProps } from './Card';
+     9 |
+  > 10 | export { Alert } from './Alert';
+       |                       ^^^^^^^^^
+    11 | export type { AlertProps } from './Alert';
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:11:33
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     9 |
+    10 | export { Alert } from './Alert';
+  > 11 | export type { AlertProps } from './Alert';
+       |                                 ^^^^^^^^^
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+    14 | export type { RadioGroupProps, RadioOption } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:19:31
+TS2307: Cannot find module './PeekingMascot' or its corresponding type declarations.
+    17 | export type { SelectProps, SelectOption } from './Select';
+    18 |
+  > 19 | export { PeekingMascot } from './PeekingMascot';
+       |                               ^^^^^^^^^^^^^^^^^
+    20 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 83:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 92:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 104:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 164:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 174:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 190:48-54
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 199:37-43
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 96:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 129:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 171:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 180:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 192:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 252:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 269:48-54
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 278:37-43
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteCodeSuccess.tsx 185:41-47
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 100:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 114:52-57
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 124:50-56
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 133:39-45
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 157:36-41
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 214:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 223:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 235:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 295:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 312:38-44
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 324:37-43
+export 'Button' (imported as 'Button') was not found in '../ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 3:0-34
+Module not found: Error: Can't resolve './Button' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 4:0-32
+Module not found: Error: Can't resolve './Input' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 6:0-32
+Module not found: Error: Can't resolve './Alert' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/pages/AdminDashboard.tsx 73:43-49
+export 'Button' (imported as 'Button') was not found in '../components/ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/HomeDashboard.tsx 73:43-49
+export 'Button' (imported as 'Button') was not found in '../components/ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 159:45-50
+export 'Alert' (imported as 'Alert') was not found in '../components/ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/ViewerDashboard.tsx 73:43-49
+export 'Button' (imported as 'Button') was not found in '../components/ui' (possible exports: Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 40 errors
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/components/layout/index.ts:2:27
+TS2307: Cannot find module './InfoPanel' or its corresponding type declarations.
+    1 | export { AuthLayout } from './AuthLayout';
+  > 2 | export { InfoPanel } from './InfoPanel';
+      |                           ^^^^^^^^^^^^^
+    3 |
+
+ERROR in src/components/ui/index.ts:1:24
+TS2307: Cannot find module './Button' or its corresponding type declarations.
+  > 1 | export { Button } from './Button';
+      |                        ^^^^^^^^^^
+    2 | export type { ButtonProps } from './Button';
+    3 |
+    4 | export { Input } from './Input';
+
+ERROR in src/components/ui/index.ts:2:34
+TS2307: Cannot find module './Button' or its corresponding type declarations.
+    1 | export { Button } from './Button';
+  > 2 | export type { ButtonProps } from './Button';
+      |                                  ^^^^^^^^^^
+    3 |
+    4 | export { Input } from './Input';
+    5 | export type { InputProps } from './Input';
+
+ERROR in src/components/ui/index.ts:4:23
+TS2307: Cannot find module './Input' or its corresponding type declarations.
+    2 | export type { ButtonProps } from './Button';
+    3 |
+  > 4 | export { Input } from './Input';
+      |                       ^^^^^^^^^
+    5 | export type { InputProps } from './Input';
+    6 |
+    7 | export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
+
+ERROR in src/components/ui/index.ts:5:33
+TS2307: Cannot find module './Input' or its corresponding type declarations.
+    3 |
+    4 | export { Input } from './Input';
+  > 5 | export type { InputProps } from './Input';
+      |                                 ^^^^^^^^^
+    6 |
+    7 | export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
+    8 | export type { CardProps } from './Card';
+
+ERROR in src/components/ui/index.ts:10:23
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     8 | export type { CardProps } from './Card';
+     9 |
+  > 10 | export { Alert } from './Alert';
+       |                       ^^^^^^^^^
+    11 | export type { AlertProps } from './Alert';
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:11:33
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     9 |
+    10 | export { Alert } from './Alert';
+  > 11 | export type { AlertProps } from './Alert';
+       |                                 ^^^^^^^^^
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+    14 | export type { RadioGroupProps, RadioOption } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:19:31
+TS2307: Cannot find module './PeekingMascot' or its corresponding type declarations.
+    17 | export type { SelectProps, SelectOption } from './Select';
+    18 |
+  > 19 | export { PeekingMascot } from './PeekingMascot';
+       |                               ^^^^^^^^^^^^^^^^^
+    20 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 83:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 92:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 104:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 164:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 174:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 96:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 129:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 171:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 180:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 192:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 252:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 100:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 114:52-57
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 157:36-41
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 214:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 223:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 235:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 295:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 4:0-32
+Module not found: Error: Can't resolve './Input' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 6:0-32
+Module not found: Error: Can't resolve './Alert' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 159:45-50
+export 'Alert' (imported as 'Alert') was not found in '../components/ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 27 errors
+Compiling...
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 83:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 92:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 104:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 164:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 174:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 96:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 129:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 171:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 180:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 192:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 252:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 100:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 114:52-57
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 157:36-41
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 214:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 223:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 235:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 295:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 4:0-32
+Module not found: Error: Can't resolve './Input' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 6:0-32
+Module not found: Error: Can't resolve './Alert' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 159:45-50
+export 'Alert' (imported as 'Alert') was not found in '../components/ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 27 errors
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 83:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 92:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 104:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 164:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/HomeUserForm.tsx 174:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 96:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 129:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 171:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 180:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 192:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/InstituteAdminForm.tsx 252:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 100:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 114:52-57
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 157:36-41
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 214:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 223:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 235:40-45
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 295:37-42
+export 'Input' (imported as 'Input') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 4:0-32
+Module not found: Error: Can't resolve './Input' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 6:0-32
+Module not found: Error: Can't resolve './Alert' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 159:45-50
+export 'Alert' (imported as 'Alert') was not found in '../components/ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, RadioGroup, Select)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 27 errors
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/components/layout/index.ts:2:27
+TS2307: Cannot find module './InfoPanel' or its corresponding type declarations.
+    1 | export { AuthLayout } from './AuthLayout';
+  > 2 | export { InfoPanel } from './InfoPanel';
+      |                           ^^^^^^^^^^^^^
+    3 |
+
+ERROR in src/components/ui/index.ts:4:23
+TS2307: Cannot find module './Input' or its corresponding type declarations.
+    2 | export type { ButtonProps } from './Button';
+    3 |
+  > 4 | export { Input } from './Input';
+      |                       ^^^^^^^^^
+    5 | export type { InputProps } from './Input';
+    6 |
+    7 | export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
+
+ERROR in src/components/ui/index.ts:5:33
+TS2307: Cannot find module './Input' or its corresponding type declarations.
+    3 |
+    4 | export { Input } from './Input';
+  > 5 | export type { InputProps } from './Input';
+      |                                 ^^^^^^^^^
+    6 |
+    7 | export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './Card';
+    8 | export type { CardProps } from './Card';
+
+ERROR in src/components/ui/index.ts:10:23
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     8 | export type { CardProps } from './Card';
+     9 |
+  > 10 | export { Alert } from './Alert';
+       |                       ^^^^^^^^^
+    11 | export type { AlertProps } from './Alert';
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:11:33
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     9 |
+    10 | export { Alert } from './Alert';
+  > 11 | export type { AlertProps } from './Alert';
+       |                                 ^^^^^^^^^
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+    14 | export type { RadioGroupProps, RadioOption } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:19:31
+TS2307: Cannot find module './PeekingMascot' or its corresponding type declarations.
+    17 | export type { SelectProps, SelectOption } from './Select';
+    18 |
+  > 19 | export { PeekingMascot } from './PeekingMascot';
+       |                               ^^^^^^^^^^^^^^^^^
+    20 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 114:52-57
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 157:36-41
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, RadioGroup, Select)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 6:0-32
+Module not found: Error: Can't resolve './Alert' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 159:45-50
+export 'Alert' (imported as 'Alert') was not found in '../components/ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, RadioGroup, Select)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 10 errors
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/components/layout/index.ts:2:27
+TS2307: Cannot find module './InfoPanel' or its corresponding type declarations.
+    1 | export { AuthLayout } from './AuthLayout';
+  > 2 | export { InfoPanel } from './InfoPanel';
+      |                           ^^^^^^^^^^^^^
+    3 |
+
+ERROR in src/components/ui/index.ts:10:23
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     8 | export type { CardProps } from './Card';
+     9 |
+  > 10 | export { Alert } from './Alert';
+       |                       ^^^^^^^^^
+    11 | export type { AlertProps } from './Alert';
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:11:33
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     9 |
+    10 | export { Alert } from './Alert';
+  > 11 | export type { AlertProps } from './Alert';
+       |                                 ^^^^^^^^^
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+    14 | export type { RadioGroupProps, RadioOption } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:19:31
+TS2307: Cannot find module './PeekingMascot' or its corresponding type declarations.
+    17 | export type { SelectProps, SelectOption } from './Select';
+    18 |
+  > 19 | export { PeekingMascot } from './PeekingMascot';
+       |                               ^^^^^^^^^^^^^^^^^
+    20 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 114:52-57
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, RadioGroup, Select)
+
+ERROR in ./src/components/auth/ViewerRegistrationForm.tsx 157:36-41
+export 'Alert' (imported as 'Alert') was not found in '../ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, RadioGroup, Select)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 6:0-32
+Module not found: Error: Can't resolve './Alert' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 159:45-50
+export 'Alert' (imported as 'Alert') was not found in '../components/ui' (possible exports: Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, RadioGroup, Select)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 10 errors
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/components/layout/index.ts:2:27
+TS2307: Cannot find module './InfoPanel' or its corresponding type declarations.
+    1 | export { AuthLayout } from './AuthLayout';
+  > 2 | export { InfoPanel } from './InfoPanel';
+      |                           ^^^^^^^^^^^^^
+    3 |
+
+ERROR in src/components/ui/index.ts:10:23
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     8 | export type { CardProps } from './Card';
+     9 |
+  > 10 | export { Alert } from './Alert';
+       |                       ^^^^^^^^^
+    11 | export type { AlertProps } from './Alert';
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:11:33
+TS2307: Cannot find module './Alert' or its corresponding type declarations.
+     9 |
+    10 | export { Alert } from './Alert';
+  > 11 | export type { AlertProps } from './Alert';
+       |                                 ^^^^^^^^^
+    12 |
+    13 | export { RadioGroup } from './RadioGroup';
+    14 | export type { RadioGroupProps, RadioOption } from './RadioGroup';
+
+ERROR in src/components/ui/index.ts:19:31
+TS2307: Cannot find module './PeekingMascot' or its corresponding type declarations.
+    17 | export type { SelectProps, SelectOption } from './Select';
+    18 |
+  > 19 | export { PeekingMascot } from './PeekingMascot';
+       |                               ^^^^^^^^^^^^^^^^^
+    20 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 6 errors
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/components/layout/index.ts:2:27
+TS2307: Cannot find module './InfoPanel' or its corresponding type declarations.
+    1 | export { AuthLayout } from './AuthLayout';
+  > 2 | export { InfoPanel } from './InfoPanel';
+      |                           ^^^^^^^^^^^^^
+    3 |
+
+ERROR in src/components/ui/index.ts:19:31
+TS2307: Cannot find module './PeekingMascot' or its corresponding type declarations.
+    17 | export type { SelectProps, SelectOption } from './Select';
+    18 |
+  > 19 | export { PeekingMascot } from './PeekingMascot';
+       |                               ^^^^^^^^^^^^^^^^^
+    20 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/ui/index.ts 9:0-48
+Module not found: Error: Can't resolve './PeekingMascot' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/ui'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 6 errors
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/components/layout/index.ts:2:27
+TS2307: Cannot find module './InfoPanel' or its corresponding type declarations.
+    1 | export { AuthLayout } from './AuthLayout';
+  > 2 | export { InfoPanel } from './InfoPanel';
+      |                           ^^^^^^^^^^^^^
+    3 |
+
+ERROR in src/components/ui/index.ts:19:31
+TS2307: Cannot find module './PeekingMascot' or its corresponding type declarations.
+    17 | export type { SelectProps, SelectOption } from './Select';
+    18 |
+  > 19 | export { PeekingMascot } from './PeekingMascot';
+       |                               ^^^^^^^^^^^^^^^^^
+    20 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/components/layout/index.ts 4:0-40
+Module not found: Error: Can't resolve './InfoPanel' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 5 errors
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/components/layout/index.ts:2:27
+TS2307: Cannot find module './InfoPanel' or its corresponding type declarations.
+    1 | export { AuthLayout } from './AuthLayout';
+  > 2 | export { InfoPanel } from './InfoPanel';
+      |                           ^^^^^^^^^^^^^
+    3 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 4 errors and 1 warning
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/components/layout/index.ts 3:0-42
+Module not found: Error: Can't resolve './AuthLayout' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/components/layout'
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 4 errors and 1 warning
+ERROR in src/components/layout/index.ts:1:28
+TS2307: Cannot find module './AuthLayout' or its corresponding type declarations.
+  > 1 | export { AuthLayout } from './AuthLayout';
+      |                            ^^^^^^^^^^^^^^
+    2 | export { InfoPanel } from './InfoPanel';
+    3 |
+
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 3 errors and 1 warning
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'Login' is not exported from './pages' (imported as 'Login').
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+ERROR in ./src/App.tsx 122:36-41
+export 'Login' (imported as 'Login') was not found in './pages' (possible exports: AdminDashboard, HomeDashboard, Register, ViewerDashboard)
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/index.ts 4:0-32
+Module not found: Error: Can't resolve './Login' in '/home/supreeth/wif-deauth/wifi-security-frontend/src/pages'
+
+webpack compiled with 3 errors and 1 warning
+ERROR in src/pages/index.ts:2:23
+TS2307: Cannot find module './Login' or its corresponding type declarations.
+    1 | export { Register } from './Register';
+  > 2 | export { Login } from './Login';
+      |                       ^^^^^^^^^
+    3 | export { AdminDashboard } from './AdminDashboard';
+    4 | export { ViewerDashboard } from './ViewerDashboard';
+    5 | export { HomeDashboard } from './HomeDashboard';
+
+Compiling...
+Failed to compile.
+
+Attempted import error: 'AuthLayout' is not exported from '../components/layout' (imported as 'AuthLayout').
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+ERROR in ./src/pages/Login.tsx 93:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+webpack compiled with 2 errors and 1 warning
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+No issues found.
+Compiling...
+Failed to compile.
+
+Attempted import error: 'AuthLayout' is not exported from '../components/layout' (imported as 'AuthLayout').
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+ERROR in ./src/pages/Login.tsx 93:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+webpack compiled with 2 errors and 1 warning
+No issues found.
+Compiling...
+Failed to compile.
+
+Attempted import error: 'AuthLayout' is not exported from '../components/layout' (imported as 'AuthLayout').
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+ERROR in ./src/pages/Register.tsx 158:30-40
+export 'AuthLayout' (imported as 'AuthLayout') was not found in '../components/layout' (module has no exports)
+
+webpack compiled with 1 error and 1 warning
+No issues found.
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+webpack compiled with 1 warning
+No issues found.
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+webpack compiled with 1 warning
+No issues found.
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+webpack compiled with 1 warning
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/layout/InfoPanel.tsx
+  Line 2:10:  'WifiIcon' is defined but never used  @typescript-eslint/no-unused-vars
+
+webpack compiled with 1 warning
+Files successfully emitted, waiting for typecheck results...
+Issues checking in progress...
+No issues found.
+Compiling...
+Compiled successfully!
+webpack compiled successfully
+No issues found.

@@ -1,0 +1,1207 @@
+{
+    "info": {
+        "name": "Module 1 - Authentication & Registration API Tests",
+        "description": "Comprehensive API tests for WiFi Security Platform Module 1: Role-Based Registration & Authentication",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "adminEmail",
+            "value": "testadmin@example.com",
+            "type": "string"
+        },
+        {
+            "key": "adminPassword",
+            "value": "Admin@123",
+            "type": "string"
+        },
+        {
+            "key": "viewerEmail",
+            "value": "testviewer@example.com",
+            "type": "string"
+        },
+        {
+            "key": "homeUserEmail",
+            "value": "homeuser@example.com",
+            "type": "string"
+        },
+        {
+            "key": "testPassword",
+            "value": "TestPass@123",
+            "type": "string"
+        },
+        {
+            "key": "instituteCode",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "authToken",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Health Check",
+            "item": [
+                {
+                    "name": "API Health Check",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('API is accessible', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403, 404, 405]);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time is acceptable', function () {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "2. Admin Registration",
+            "item": [
+                {
+                    "name": "2.1 Register Admin - Success",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// Generate unique email to avoid duplicate errors",
+                                    "var timestamp = Date.now();",
+                                    "pm.environment.set('uniqueAdminEmail', 'admin' + timestamp + '@test.com');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201 Created', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has required fields', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('instituteCode');",
+                                    "    pm.expect(jsonData).to.have.property('instituteName');",
+                                    "});",
+                                    "",
+                                    "pm.test('Institute code is valid format', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (jsonData.instituteCode) {",
+                                    "        pm.expect(jsonData.instituteCode).to.match(/^[A-Z0-9]+$/);",
+                                    "        pm.collectionVariables.set('instituteCode', jsonData.instituteCode);",
+                                    "    }",
+                                    "});",
+                                    "",
+                                    "pm.test('Response time is acceptable', function () {",
+                                    "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"instituteName\": \"Test Institute {{$timestamp}}\",\n    \"instituteType\": \"COLLEGE\",\n    \"location\": \"Test Location\",\n    \"adminName\": \"Test Admin\",\n    \"email\": \"admin{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "admin"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2.2 Register Admin - Invalid Email",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});",
+                                    "",
+                                    "pm.test('Error message mentions email validation', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var responseText = JSON.stringify(jsonData).toLowerCase();",
+                                    "    pm.expect(responseText).to.include('email');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"instituteName\": \"Test Institute\",\n    \"instituteType\": \"COLLEGE\",\n    \"location\": \"Test Location\",\n    \"adminName\": \"Test Admin\",\n    \"email\": \"invalid-email\",\n    \"password\": \"{{testPassword}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "admin"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2.3 Register Admin - Weak Password",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});",
+                                    "",
+                                    "pm.test('Error message mentions password validation', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    var responseText = JSON.stringify(jsonData).toLowerCase();",
+                                    "    pm.expect(responseText).to.include('password');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"instituteName\": \"Test Institute\",\n    \"instituteType\": \"COLLEGE\",\n    \"location\": \"Test Location\",\n    \"adminName\": \"Test Admin\",\n    \"email\": \"admin{{$timestamp}}@test.com\",\n    \"password\": \"weak\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "admin"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2.4 Register Admin - Missing Required Fields",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains validation errors', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.be.an('object');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"instituteName\": \"\",\n    \"instituteType\": \"COLLEGE\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "admin"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2.5 Register Admin - Invalid Institute Type",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"instituteName\": \"Test Institute\",\n    \"instituteType\": \"INVALID_TYPE\",\n    \"location\": \"Test Location\",\n    \"adminName\": \"Test Admin\",\n    \"email\": \"admin{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/admin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "admin"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "3. Home User Registration",
+            "item": [
+                {
+                    "name": "3.1 Register Home User - Success",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201 Created', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has token', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('token');",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has user info', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('email');",
+                                    "    pm.expect(jsonData).to.have.property('role');",
+                                    "});",
+                                    "",
+                                    "pm.test('User role is HOME', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.role).to.equal('HOME_USER');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Home User {{$timestamp}}\",\n    \"email\": \"home{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\",\n    \"networkName\": \"My Home Network\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3.2 Register Home User - Invalid Email",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Home User\",\n    \"email\": \"not-an-email\",\n    \"password\": \"{{testPassword}}\",\n    \"networkName\": \"My Home Network\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3.3 Register Home User - Weak Password",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Home User\",\n    \"email\": \"home{{$timestamp}}@test.com\",\n    \"password\": \"123\",\n    \"networkName\": \"My Home Network\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "4. Viewer Registration",
+            "item": [
+                {
+                    "name": "4.1 Verify Institute Code - Valid",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200 OK', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has validation result', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('valid');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"instituteCode\": \"{{instituteCode}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/verify-institute-code",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-institute-code"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "4.2 Verify Institute Code - Invalid",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Response indicates invalid code', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    if (pm.response.code === 200) {",
+                                    "        pm.expect(jsonData.valid).to.be.false;",
+                                    "    } else {",
+                                    "        pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"instituteCode\": \"INVALIDCODE123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/verify-institute-code",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-institute-code"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "4.3 Register Viewer - Invalid Institute Code",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code indicates error', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"instituteCode\": \"INVALIDCODE\",\n    \"name\": \"Test Viewer\",\n    \"email\": \"viewer{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/viewer",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "viewer"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "5. Login Tests",
+            "item": [
+                {
+                    "name": "5.1 Login - Success (Create user first)",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// First create a user that we can login with",
+                                    "var timestamp = Date.now();",
+                                    "pm.collectionVariables.set('testLoginEmail', 'login' + timestamp + '@test.com');"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "// This creates a user for login testing",
+                                    "if (pm.response.code === 201) {",
+                                    "    pm.test('User created successfully', function () {",
+                                    "        pm.response.to.have.status(201);",
+                                    "    });",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Login Test User\",\n    \"email\": \"logintest{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\",\n    \"networkName\": \"Test Network\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "5.2 Login - Invalid Credentials",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 401 Unauthorized', function () {",
+                                    "    pm.response.to.have.status(401);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response contains error message', function () {",
+                                    "    var jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('message');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"nonexistent@test.com\",\n    \"password\": \"WrongPassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "5.3 Login - Invalid Email Format",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"not-an-email\",\n    \"password\": \"SomePassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "5.4 Login - Missing Password",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"test@test.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "5.5 Login - Missing Email",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"password\": \"TestPass@123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "5.6 Login - Empty Body",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 400 Bad Request', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "6. Security Tests",
+            "item": [
+                {
+                    "name": "6.1 SQL Injection Test - Email",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('SQL injection is prevented', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+                                    "});",
+                                    "",
+                                    "pm.test('No database error exposed', function () {",
+                                    "    var responseText = pm.response.text().toLowerCase();",
+                                    "    pm.expect(responseText).to.not.include('sql');",
+                                    "    pm.expect(responseText).to.not.include('syntax');",
+                                    "    pm.expect(responseText).to.not.include('mysql');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"test@test.com' OR '1'='1\",\n    \"password\": \"password\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "6.2 XSS Test - Name Field",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('XSS payload is rejected', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"<script>alert('XSS')</script>\",\n    \"email\": \"xss{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\",\n    \"networkName\": \"Test\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "6.3 Large Payload Test",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// Generate a very long string",
+                                    "var longString = 'A'.repeat(10000);",
+                                    "pm.variables.set('longString', longString);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Large payload is handled gracefully', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([400, 413]);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"{{longString}}\",\n    \"email\": \"large{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\",\n    \"networkName\": \"Test\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "7. Edge Cases",
+            "item": [
+                {
+                    "name": "7.1 Unicode Characters in Name",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Unicode characters are handled', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"用户 नाम 🎉\",\n    \"email\": \"unicode{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\",\n    \"networkName\": \"Test Network\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7.2 Email with Plus Sign",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Email with plus sign is handled', function () {",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Plus Email User\",\n    \"email\": \"test+alias{{$timestamp}}@test.com\",\n    \"password\": \"{{testPassword}}\",\n    \"networkName\": \"Test Network\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7.3 Password at Minimum Length",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Minimum length password is accepted if valid', function () {",
+                                    "    // Password 'MinPass1' is 8 chars with uppercase and number",
+                                    "    pm.expect(pm.response.code).to.be.oneOf([201, 400]);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Min Password User\",\n    \"email\": \"minpass{{$timestamp}}@test.com\",\n    \"password\": \"MinPass1\",\n    \"networkName\": \"Test Network\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "7.4 Empty String vs Null",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Empty string is validated', function () {",
+                                    "    pm.response.to.have.status(400);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"\",\n    \"email\": \"\",\n    \"password\": \"\",\n    \"networkName\": \"\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register/home",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "register",
+                                "home"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
