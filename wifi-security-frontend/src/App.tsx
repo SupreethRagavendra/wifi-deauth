@@ -13,6 +13,7 @@ import {
   AdminDashboard,
   ViewerDashboard,
   HomeDashboard,
+  DetectionMonitor,
 } from './pages';
 import './index.css';
 
@@ -103,6 +104,16 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute allowedRoles={['HOME_USER']}>
             <HomeDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected routes - Detection Monitor (accessible to all authenticated users) */}
+      <Route
+        path="/detection-monitor"
+        element={
+          <ProtectedRoute>
+            <DetectionMonitor />
           </ProtectedRoute>
         }
       />

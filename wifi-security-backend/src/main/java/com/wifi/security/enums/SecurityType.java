@@ -6,5 +6,6 @@ package com.wifi.security.enums;
 public enum SecurityType {
     WPA2,
     WPA3,
-    OPEN
+    OPEN,
+    WEP
 }

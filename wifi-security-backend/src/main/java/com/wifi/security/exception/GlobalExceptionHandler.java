@@ -19,6 +19,10 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.hibernate.exception.ConstraintViolationException;
 
+import com.wifi.security.exception.DetectionTimeoutException;
+import com.wifi.security.exception.DetectionServiceException;
+import com.wifi.security.exception.CircuitBreakerOpenException;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -251,6 +255,57 @@ public class GlobalExceptionHandler {
                                 .build();
 
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        }
+
+        @ExceptionHandler(DetectionTimeoutException.class)
+        public ResponseEntity<ApiErrorResponse> handleDetectionTimeout(
+                        DetectionTimeoutException ex, HttpServletRequest request) {
+                logger.warn("Detection analysis timeout: {}", ex.getMessage());
+
+                ApiErrorResponse response = ApiErrorResponse.builder()
+                                .error("Gateway Timeout")
+                                .message("Detection analysis timed out. Partial results may be available.")
+                                .status(HttpStatus.GATEWAY_TIMEOUT.value())
+                                .timestamp(LocalDateTime.now())
+                                .path(request.getRequestURI())
+                                .build();
+
+                return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).body(response);
+        }
+
+        @ExceptionHandler(DetectionServiceException.class)
+        public ResponseEntity<ApiErrorResponse> handleDetectionServiceException(
+                        DetectionServiceException ex, HttpServletRequest request) {
+                logger.error("Detection service error: {}", ex.getMessage(), ex);
+
+                ApiErrorResponse response = ApiErrorResponse.builder()
+                                .error("Service Error")
+                                .message("Detection analysis failed. Please try again.")
+                                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                                .timestamp(LocalDateTime.now())
+                                .path(request.getRequestURI())
+                                .build();
+
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+
+        @ExceptionHandler(CircuitBreakerOpenException.class)
+        public ResponseEntity<ApiErrorResponse> handleCircuitBreakerOpen(
+                        CircuitBreakerOpenException ex, HttpServletRequest request) {
+                logger.warn("Circuit breaker open: {}", ex.getMessage());
+
+                ApiErrorResponse response = ApiErrorResponse.builder()
+                                .error("Service Unavailable")
+                                .message("Detection service temporarily unavailable. Please retry after " +
+                                                (ex.getRetryAfterMs() / 1000) + " seconds.")
+                                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+                                .timestamp(LocalDateTime.now())
+                                .path(request.getRequestURI())
+                                .build();
+
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                                .header("Retry-After", String.valueOf(ex.getRetryAfterMs() / 1000))
+                                .body(response);
         }
 
         @ExceptionHandler(Exception.class)

@@ -7,7 +7,7 @@ import React, {
     ReactNode,
 } from 'react';
 import { User, UserRole } from '../types';
-import { authService, getToken } from '../services/api';
+import { authService, getToken, getStoredUser, setStoredUser } from '../services/api';
 
 interface AuthContextType {
     user: User | null;
@@ -28,7 +28,8 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-    const [user, setUserState] = useState<User | null>(null);
+    // Initialize user from localStorage if available
+    const [user, setUserState] = useState<User | null>(() => getStoredUser());
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +42,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             if (response.success && response.data) {
                 setUserState(response.data.user);
+                // Persist user to localStorage
+                setStoredUser(response.data.user);
                 return true;
             } else {
                 setError(response.error || 'Login failed');
@@ -59,6 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const logout = useCallback(() => {
         authService.logout();
         setUserState(null);
+        setStoredUser(null);
         setError(null);
     }, []);
 

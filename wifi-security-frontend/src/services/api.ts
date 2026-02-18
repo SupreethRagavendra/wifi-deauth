@@ -4,6 +4,11 @@ import {
     User,
     ApiResponse,
     InstituteVerification,
+    WiFiNetwork,
+    WiFiNetworkRequest,
+    WiFiScanResult,
+    DetectionEvent,
+    ConnectedClient,
 } from '../types';
 import {
     InstituteAdminFormData,
@@ -13,15 +18,40 @@ import {
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
 
-// In-memory token storage (NOT localStorage per requirements)
-let authToken: string | null = null;
+// Token storage using localStorage for persistence across page navigations
+const TOKEN_KEY = 'wifi_shield_token';
+const USER_KEY = 'wifi_shield_user';
 
-export const getToken = (): string | null => authToken;
+export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 export const setToken = (token: string | null): void => {
-    authToken = token;
+    if (token) {
+        localStorage.setItem(TOKEN_KEY, token);
+    } else {
+        localStorage.removeItem(TOKEN_KEY);
+    }
 };
 export const clearToken = (): void => {
-    authToken = null;
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+};
+
+export const getStoredUser = (): any => {
+    const userStr = localStorage.getItem(USER_KEY);
+    if (userStr) {
+        try {
+            return JSON.parse(userStr);
+        } catch {
+            return null;
+        }
+    }
+    return null;
+};
+export const setStoredUser = (user: any): void => {
+    if (user) {
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } else {
+        localStorage.removeItem(USER_KEY);
+    }
 };
 
 // Create axios instance
@@ -30,7 +60,7 @@ const api: AxiosInstance = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000,
+    timeout: 30000,
 });
 
 // Request interceptor to add auth token
@@ -295,8 +325,131 @@ export const authService = {
                 success: false,
                 error: error instanceof Error ? error.message : 'Failed to get user',
             };
+
         }
     },
+};
+
+// WiFi Service
+export const wifiService = {
+    // Scan for networks
+    async scanNetworks(): Promise<ApiResponse<WiFiScanResult[]>> {
+        try {
+            const response = await api.get('/wifi/scan');
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Scan failed',
+            };
+        }
+    },
+
+    // Get all networks
+    async getNetworks(): Promise<ApiResponse<WiFiNetwork[]>> {
+        try {
+            const response = await api.get('/wifi');
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to fetch networks',
+            };
+        }
+    },
+
+    // Add network
+    async addNetwork(data: WiFiNetworkRequest): Promise<ApiResponse<WiFiNetwork>> {
+        try {
+            const response = await api.post('/wifi', data);
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to add network',
+            };
+        }
+    },
+
+    // Delete network
+    async deleteNetwork(id: string): Promise<ApiResponse<void>> {
+        try {
+            const response = await api.delete(`/wifi/${id}`);
+            return {
+                success: true,
+                message: response.data.message
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to delete network',
+            };
+        }
+    },
+
+    // Get connected clients
+    async getConnectedClients(id: string): Promise<ApiResponse<ConnectedClient[]>> {
+        try {
+            const response = await api.get(`/wifi/${id}/clients`);
+            return {
+                success: true,
+                data: response.data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to fetch connected clients',
+            };
+        }
+    }
+};
+
+// Detection Service (Module 3)
+export const detectionService = {
+    // Get recent detection events
+    async getRecentEvents(): Promise<ApiResponse<DetectionEvent[]>> {
+        try {
+            const response = await api.get('/detection/events/recent');
+            // The API returns the list directly, but our helper expects { success, data }
+            // If the backend returns just the list, we wrap it.
+            // Based on Controller: return ResponseEntity.ok(layer1Service.getRecentEvents());
+            // It returns List<DetectionEvent> directly.
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to fetch detection events',
+            };
+        }
+    },
+
+    // Clear all detection events
+    async clearEvents(): Promise<ApiResponse<void>> {
+        try {
+            const response = await api.delete('/detection/events');
+            return {
+                success: true,
+                message: response.data.message
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to clear detection events',
+            };
+        }
+    }
 };
 
 export default api;
