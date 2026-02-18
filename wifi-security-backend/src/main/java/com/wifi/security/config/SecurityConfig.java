@@ -61,8 +61,27 @@ public class SecurityConfig {
                         // Public endpoint - verify institute code
                         .requestMatchers(HttpMethod.GET, "/api/institutes/*/verify").permitAll()
 
-                        // Health check
+                        // Packet Receiver API
+                        .requestMatchers("/api/packets/**").permitAll()
+                        .requestMatchers("/api/packets/recent").permitAll()
+
+                        // Detection API endpoints (v1)
+                        .requestMatchers("/api/detection/**").permitAll()
+                        .requestMatchers("/api/v1/detection/**").permitAll()
+                        .requestMatchers("/api/v2/detection/**").authenticated()
+
+                        // Actuator endpoints
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/actuator/health/**").permitAll()
+                        .requestMatchers("/actuator/prometheus").permitAll()
+                        .requestMatchers("/actuator/info").permitAll()
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+
+                        // OpenAPI / Swagger UI
+                        .requestMatchers("/swagger-ui.html").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/api-docs/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
 
                         // Error endpoint
                         .requestMatchers("/error").permitAll()

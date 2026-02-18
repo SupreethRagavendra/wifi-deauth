@@ -1,0 +1,309 @@
+# ===================================
+# WiFi Security Backend Configuration
+# Spring Boot Application
+# ===================================
+
+# ===================
+# Server Configuration
+# ===================
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+spring:
+  application:
+    name: wifi-security-backend
+  
+  # ===================
+  # Profiles
+  # ===================
+  profiles:
+    active: ${SPRING_PROFILE:dev}
+
+  # ===================
+  # Database Configuration (Local MySQL/MariaDB)
+  # ===================
+  datasource:
+    url: jdbc:mysql://localhost:3306/wifi_security?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:Supreeth@123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # HikariCP Connection Pool Configuration
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:30}
+      minimum-idle: ${DB_POOL_MIN:10}
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+      pool-name: WifiSecurityHikariCP
+
+  # ===================
+  # JPA/Hibernate Configuration
+  # ===================
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: ${JPA_SHOW_SQL:false}
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+        generate_statistics: ${HIBERNATE_STATS:false}
+
+  # ===================
+  # SQL Initialization
+  # ===================
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+
+# ===================
+# JWT Configuration
+# ===================
+jwt:
+  secret: ${JWT_SECRET:WiFiSecurityPlatformSuperSecretKey2026ThatIsAtLeast256BitsLongForHS256Algorithm}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# ===================
+# CORS Configuration
+# ===================
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+# ===================
+# Security Configuration
+# ===================
+security:
+  bcrypt:
+    strength: 12
+
+# ===================
+# Detection Engine Configuration
+# ===================
+detection:
+  # Feature Flags for Gradual Rollout
+  enabled: ${DETECTION_ENABLED:true}
+  monitor:
+    interface: wlan1
+  layer2-enabled: ${DETECTION_LAYER2_ENABLED:false}
+  layer3-enabled: ${DETECTION_LAYER3_ENABLED:false}
+  
+  layer1:
+    # Timeout configuration (milliseconds) - Must be enough for DB queries (~100ms)
+    timeout-ms: ${DETECTION_L1_TIMEOUT:200}
+    
+    # Scoring thresholds (0-100 scale)
+    attack-threshold: ${DETECTION_L1_ATTACK_THRESHOLD:50} # Score >= 50 = CRITICAL attack
+    suspicious-threshold: ${DETECTION_L1_SUSPICIOUS_THRESHOLD:30} # Score >= 30 = HIGH suspicion
+    warning-threshold: ${DETECTION_L1_WARNING_THRESHOLD:60} # Only save events with score >= 60
+    
+    # Rate Analyzer settings
+    rate-analyzer:
+      window-seconds: 5 # Detection window (5 seconds)
+      threshold-normal: 3 # <= 3 packets in 5s = normal (score 0)
+      threshold-suspicious: 8 # 4-8 packets = suspicious (score 40)
+      threshold-attack: 15 # >= 15 packets in 5s = attack (score 100)
+    
+    # Sequence Validator settings
+    sequence-validator:
+      max-gap: 10
+      max-duplicates: 2
+      reset-threshold: 3
+    
+    # Time Anomaly Detector settings
+    time-anomaly:
+      burst-threshold-ms: 10
+      burst-count-threshold: 5
+      variance-threshold: 0.1
+    
+    # Session State Checker settings
+    session-state:
+      window-seconds: 30
+      mass-deauth-threshold: 5
+      orphan-deauth-threshold: 3
+
+  # Retry Configuration
+  retry:
+    max-attempts: 3
+    initial-delay-ms: 100
+    max-delay-ms: 1000
+    multiplier: 2.0
+
+  # Circuit Breaker Configuration
+  circuit-breaker:
+    failure-threshold: 5
+    success-threshold: 3
+    timeout-ms: 30000
+    half-open-requests: 3
+
+# ===================
+# Logging Configuration
+# ===================
+logging:
+  level:
+    root: INFO
+    com.wifi.security: ${LOG_LEVEL:DEBUG}
+    com.wifi.security.service.layer1: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: ${HIBERNATE_SQL_LOG:WARN}
+    org.hibernate.type.descriptor.sql: ${HIBERNATE_PARAMS_LOG:WARN}
+    io.micrometer: INFO
+  
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  
+  file:
+    name: ${LOG_FILE:logs/wifi-security.log}
+    max-size: 10MB
+    max-history: 30
+
+# ===================
+# Actuator & Monitoring Configuration
+# ===================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,loggers
+      base-path: /actuator
+  
+  endpoint:
+    health:
+      show-details: ${HEALTH_DETAILS:when_authorized}
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
+  
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${SPRING_PROFILE:dev}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        detection.layer1.duration: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+        detection.layer1.duration: 0.5,0.95,0.99
+  
+  health:
+    circuitbreakers:
+      enabled: true
+    db:
+      enabled: true
+
+# ===================
+# OpenAPI / Swagger Configuration
+# ===================
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: ${SWAGGER_ENABLED:true}
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: ${SWAGGER_ENABLED:true}
+    operationsSorter: method
+    tagsSorter: alpha
+
+---
+# ===================
+# Development Profile
+# ===================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        generate_statistics: true
+
+logging:
+  level:
+    com.wifi.security: DEBUG
+    org.hibernate.SQL: DEBUG
+
+management:
+  endpoint:
+    health:
+      show-details: always
+
+---
+# ===================
+# Test Profile
+# ===================
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  
+  h2:
+    console:
+      enabled: true
+
+logging:
+  level:
+    com.wifi.security: DEBUG
+
+---
+# ===================
+# Production Profile
+# ===================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        generate_statistics: false
+
+logging:
+  level:
+    root: WARN
+    com.wifi.security: INFO
+    org.springframework.security: WARN
+
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  swagger-ui:
+    enabled: false

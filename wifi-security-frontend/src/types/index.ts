@@ -74,3 +74,56 @@ export interface FormState {
     error: string | null;
     success: boolean;
 }
+
+// WiFi Types
+export type SecurityType = 'OPEN' | 'WEP' | 'WPA' | 'WPA2' | 'WPA3' | 'WPA2_ENTERPRISE' | 'WPA3_OWE';
+
+export interface WiFiNetwork {
+    wifiId: string;
+    ssid: string;
+    bssid: string;
+    channel: number;
+    securityType: SecurityType;
+    location: string;
+    createdByUserId: string;
+    createdByUserName: string;
+    createdAt: string;
+}
+
+export interface WiFiNetworkRequest {
+    ssid: string;
+    bssid: string;
+    channel?: number;
+    securityType?: SecurityType;
+    location?: string;
+}
+
+export interface WiFiScanResult {
+    ssid: string;
+    bssid: string;
+    channel: number;
+    frequency: number;
+    signalStrength: number;
+    securityType: SecurityType;
+    timestamp: string;
+}
+
+export interface DetectionEvent {
+    eventId: number;
+    attackerMac: string;
+    targetBssid: string;
+    targetMac?: string;
+    attackType?: string;
+    layer1Score: number;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    detectedAt: string;
+    details?: string;
+}
+
+export interface ConnectedClient {
+    macAddress: string;
+    hostname?: string;
+    connectionTime: string;
+    signalStrength?: string;
+    ipAddress?: string;
+}

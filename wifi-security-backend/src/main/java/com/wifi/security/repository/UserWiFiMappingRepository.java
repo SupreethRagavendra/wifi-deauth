@@ -29,4 +29,9 @@ public interface UserWiFiMappingRepository extends JpaRepository<UserWiFiMapping
      * Check if a mapping exists.
      */
     boolean existsByUserAndWifiNetwork(User user, WiFiNetwork wifiNetwork);
+
+    /**
+     * Find all mappings for a specific WiFi network.
+     */
+    List<UserWiFiMapping> findByWifiNetwork(WiFiNetwork wifiNetwork);
 }

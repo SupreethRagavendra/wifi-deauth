@@ -11,6 +11,9 @@ import com.wifi.security.exception.UnauthorizedException;
 import com.wifi.security.repository.UserRepository;
 import com.wifi.security.repository.UserWiFiMappingRepository;
 import com.wifi.security.repository.WiFiNetworkRepository;
+import com.wifi.security.service.WiFiScannerService;
+import com.wifi.security.dto.response.ConnectedClientResponse;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -49,12 +52,28 @@ public class WiFiController {
     private final UserRepository userRepository;
     private final UserWiFiMappingRepository userWiFiMappingRepository;
 
+    private final WiFiScannerService wifiScannerService;
+
     public WiFiController(WiFiNetworkRepository wifiNetworkRepository,
             UserRepository userRepository,
-            UserWiFiMappingRepository userWiFiMappingRepository) {
+            UserWiFiMappingRepository userWiFiMappingRepository,
+            WiFiScannerService wifiScannerService) {
         this.wifiNetworkRepository = wifiNetworkRepository;
         this.userRepository = userRepository;
         this.userWiFiMappingRepository = userWiFiMappingRepository;
+        this.wifiScannerService = wifiScannerService;
+    }
+
+    /**
+     * Scan for nearby WiFi networks (ADMIN only).
+     * 
+     * GET /api/wifi/scan
+     */
+    @GetMapping("/scan")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<com.wifi.security.dto.response.WiFiScanResult>> scanNearbyNetworks() {
+        User user = getCurrentUser();
+        return ResponseEntity.ok(wifiScannerService.scanNetworks(user.getInstitute()));
     }
 
     // DTO for WiFi network requests
@@ -176,14 +195,29 @@ public class WiFiController {
     }
 
     /**
+     * Get connected clients for a WiFi network (ADMIN only).
+     * 
+     * GET /api/wifi/{id}/clients
+     */
+    @GetMapping("/{id}/clients")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ConnectedClientResponse>> getConnectedClients(@PathVariable String id) {
+        WiFiNetwork network = wifiNetworkRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("WiFi Network", id));
+
+        return ResponseEntity.ok(wifiScannerService.scanClients(network.getBssid(), network.getChannel()));
+    }
+
+    /**
      * Delete a WiFi network (ADMIN only).
      * 
      * DELETE /api/wifi/{id}
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
+    @Transactional(readOnly = false)
     public ResponseEntity<Map<String, String>> deleteWiFiNetwork(@PathVariable String id) {
+        logger.info("Delete request received for ID: {}", id);
         User user = getCurrentUser();
         Institute institute = user.getInstitute();
 
@@ -197,7 +231,14 @@ public class WiFiController {
 
         logger.info("Deleting WiFi network: {} by admin: {}", network.getSsid(), user.getEmail());
 
+        // Delete user mappings first to avoid foreign key constraints
+        List<UserWiFiMapping> mappings = userWiFiMappingRepository.findByWifiNetwork(network);
+        if (!mappings.isEmpty()) {
+            userWiFiMappingRepository.deleteAll(mappings);
+        }
+
         wifiNetworkRepository.delete(network);
+        wifiNetworkRepository.flush(); // Force flush to ensure DB constraints are checked immediately
 
         return ResponseEntity.ok(Map.of("message", "WiFi network deleted successfully"));
     }

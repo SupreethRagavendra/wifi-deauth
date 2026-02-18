@@ -1,102 +1,36 @@
-# 📡 WiFi Deauth Pro
+# Wi-Fi Security Platform
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-green.svg)](https://python.org)
-[![Platform](https://img.shields.io/badge/Platform-Linux-orange.svg)]()
+A real-time Wi-Fi Deauthentication Attack Detection System.
 
-> **⚠️ Educational Purposes Only** - This tool is intended for authorized security testing and educational purposes only.
+## Quick Start (3 Terminals)
 
-A powerful WiFi deauthentication tool for network security testing and wireless network analysis.
+Open 3 separate terminals and run the following commands in order:
 
----
-
-## 🚀 Features
-
-- **Network Scanning** - Discover nearby WiFi networks and connected clients
-- **Targeted Deauth** - Send deauthentication packets to specific devices
-- **Multiple Modes** - Support for various attack modes and configurations
-- **Real-time Monitoring** - Live updates on network activity
-- **User-Friendly Interface** - Clean and intuitive UI for easy operation
-
----
-
-## 📋 Prerequisites
-
-Before using this tool, ensure you have:
-
-- Linux operating system (Kali Linux recommended)
-- Python 3.8 or higher
-- Wireless adapter with monitor mode support
-- Root/sudo privileges
-
----
-
-## 🔧 Installation
-
+### Terminal 1: Backend (API)
 ```bash
-# Clone the repository
-git clone https://github.com/SupreethRagavendra/wifi-deauth.git
+make run-backend
+```
+*Wait until you see "Started WifiSecurityApplication..."*
 
-# Navigate to the directory
-cd wifi-deauth
+### Terminal 2: Frontend (Dashboard)
+```bash
+make run-frontend
+```
+*Wait until the browser opens automatically at http://localhost:3000*
 
-# Install dependencies
-pip install -r requirements.txt
+### Terminal 3: Packet Sniffer (Detection Engine)
+```bash
+make run-sniffer
+```
+*Enter your sudo password when prompted. This starts the real-time packet capture on `wlan1`.*
+
+## First Time Setup
+If this is your first time running the project, install dependencies first:
+```bash
+make setup
 ```
 
----
-
-## 💻 Usage
-
-```bash
-# Enable monitor mode on your wireless interface
-sudo airmon-ng start wlan0
-
-# Run the tool
-sudo python3 main.py
-```
-
----
-
-## ⚠️ Legal Disclaimer
-
-**This tool is provided for educational and authorized security testing purposes only.**
-
-- ❌ Do NOT use this tool on networks you don't own or have explicit permission to test
-- ❌ Unauthorized interception of network traffic is illegal
-- ✅ Always obtain proper authorization before testing
-- ✅ Use responsibly and ethically
-
-The developer assumes no liability for misuse of this software. Users are responsible for complying with all applicable laws.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👤 Author
-
-**Supreeth Ragavendra**
-
-- GitHub: [@SupreethRagavendra](https://github.com/SupreethRagavendra)
-
----
-
-<p align="center">
-  Made with ❤️ for the cybersecurity community
-</p>
+## Troubleshooting
+- **Permission Denied:** Ensure you have sudo access for `run-sniffer`.
+- **Interface Not Found:** Ensure `wlan1` is plugged in and recognized by `iwconfig`.
+- **Port In Use:** Run `lsof -ti:8080 | xargs kill -9` to free up the backend port.
