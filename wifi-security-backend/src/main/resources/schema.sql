@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS wifi_networks (
     INDEX idx_wifi_institute_id (institute_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- user_wifi_mapping (for Viewer access control)
-CREATE TABLE IF NOT EXISTS user_wifi_mapping (
+-- user_wifi_assignments (for Viewer access control)
+CREATE TABLE IF NOT EXISTS user_wifi_assignments (
     mapping_id VARCHAR(36) PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
     wifi_id VARCHAR(36) NOT NULL,
@@ -90,24 +90,76 @@ CREATE TABLE IF NOT EXISTS detected_anomalies (
 -- ===================================
 
 -- detection_events table - Stores Layer 1 detection results
+-- attack_sessions table (Matches AttackSession.java)
+CREATE TABLE IF NOT EXISTS attack_sessions (
+    session_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    started_at DATETIME(6) NOT NULL,
+    ended_at DATETIME(6),
+    last_activity DATETIME(6) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    attack_type VARCHAR(50) NOT NULL DEFAULT 'UNKNOWN',
+    primary_attacker_mac CHAR(17) NOT NULL,
+    primary_target_bssid CHAR(17) NOT NULL,
+    total_events INT UNSIGNED DEFAULT 0,
+    total_frames INT UNSIGNED DEFAULT 0,
+    peak_rate DECIMAL(10,2),
+    avg_confidence DECIMAL(5,4),
+    max_severity VARCHAR(20) DEFAULT 'LOW',
+    affected_clients JSON,
+    auto_blocked BOOLEAN DEFAULT FALSE,
+    blocked_at DATETIME(6),
+    block_duration_min INT UNSIGNED,
+    institute_id VARCHAR(36),
+    analyst_notes TEXT,
+    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    
+    INDEX idx_session_status (status, last_activity DESC),
+    INDEX idx_session_attacker (primary_attacker_mac, started_at DESC),
+    INDEX idx_session_target (primary_target_bssid, started_at DESC),
+    INDEX idx_session_institute (institute_id, status, started_at DESC)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- detection_events table (Updated to match DetectionEvent.java)
 CREATE TABLE IF NOT EXISTS detection_events (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    network_id VARCHAR(36),
-    attacker_mac VARCHAR(17) NOT NULL,
-    victim_mac VARCHAR(17) NOT NULL,
-    rate_score INT DEFAULT 0,
-    sequence_score INT DEFAULT 0,
-    time_anomaly_score INT DEFAULT 0,
-    session_state_score INT DEFAULT 0,
-    layer1_total INT DEFAULT 0,
-    final_confidence DECIMAL(5,2),
-    verdict VARCHAR(20) NOT NULL,
-    detected_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    evidence_json JSON,
-    FOREIGN KEY (network_id) REFERENCES wifi_networks(wifi_id) ON DELETE SET NULL,
-    INDEX idx_detection_network (network_id),
-    INDEX idx_detection_attacker (attacker_mac),
-    INDEX idx_detection_time (detected_at)
+    event_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    detected_at DATETIME(6) NOT NULL,
+    attack_type VARCHAR(50) NOT NULL,
+    confidence DECIMAL(5,4) NOT NULL DEFAULT 0.0000,
+    severity VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',
+    layer1_score TINYINT UNSIGNED DEFAULT 0,
+    layer2_score TINYINT UNSIGNED DEFAULT 0,
+    layer3_score TINYINT UNSIGNED DEFAULT 0,
+    total_score TINYINT UNSIGNED DEFAULT 0,
+    attacker_mac CHAR(17) NOT NULL,
+    victim_mac CHAR(17) NOT NULL,
+    target_bssid CHAR(17),
+    frame_count INT UNSIGNED DEFAULT 0,
+    attack_duration_ms INT UNSIGNED DEFAULT 0,
+    frames_per_second DECIMAL(10,2),
+    attack_start DATETIME(6) NOT NULL,
+    attack_end DATETIME(6),
+    session_id BIGINT,
+    institute_id VARCHAR(36),
+    wifi_id VARCHAR(36),
+    alert_sent BOOLEAN DEFAULT FALSE,
+    blocked BOOLEAN DEFAULT FALSE,
+    acknowledged BOOLEAN DEFAULT FALSE,
+    acknowledged_by VARCHAR(36),
+    acknowledged_at DATETIME(6),
+    evidence JSON,
+    created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    
+    FOREIGN KEY (session_id) REFERENCES attack_sessions(session_id) ON DELETE SET NULL,
+    FOREIGN KEY (institute_id) REFERENCES institutes(institute_id) ON DELETE CASCADE,
+    FOREIGN KEY (wifi_id) REFERENCES wifi_networks(wifi_id) ON DELETE SET NULL,
+    
+    INDEX idx_event_detected_at (detected_at DESC),
+    INDEX idx_event_attacker (attacker_mac, detected_at DESC),
+    INDEX idx_event_target (victim_mac, detected_at DESC),
+    INDEX idx_event_bssid (target_bssid, detected_at DESC),
+    INDEX idx_event_severity (severity, detected_at DESC)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- frame_tracking table - Logs individual frames for analysis

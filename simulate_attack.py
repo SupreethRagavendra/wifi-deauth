@@ -12,7 +12,7 @@ TARGET_CLIENT = "4C:6F:9C:F4:FA:63"
 
 def generate_packet(seq):
     return {
-        "sourceMac": TARGET_CLIENT,  # Client sends Deauth to AP? Or AP to Client? usually AP->Client or Client->AP
+        "src": TARGET_CLIENT,  # Client sends Deauth to AP? Or AP to Client? usually AP->Client or Client->AP
         "dst": TARGET_AP,
         "bssid": TARGET_AP,
         "reason": 7,

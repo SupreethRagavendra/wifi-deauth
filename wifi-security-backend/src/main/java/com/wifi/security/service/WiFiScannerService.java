@@ -38,8 +38,8 @@ public class WiFiScannerService {
         List<WiFiScanResult> results = new ArrayList<>();
 
         try {
-            // Command: python3 scan_networks.py
-            ProcessBuilder pb = new ProcessBuilder("python3", SCRIPT_PATH);
+            // Command: python3 scan_networks.py --interface <interface>
+            ProcessBuilder pb = new ProcessBuilder("python3", SCRIPT_PATH, "--interface", monitorInterface);
             pb.redirectErrorStream(false);
 
             Process process = pb.start();
@@ -169,7 +169,6 @@ public class WiFiScannerService {
             log.error("Error executing client scan script", e);
         }
 
-        // No mock data - strict real-time mode
         if (results.isEmpty()) {
             log.info("No real clients found via script.");
         }

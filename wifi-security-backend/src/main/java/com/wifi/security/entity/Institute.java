@@ -26,7 +26,7 @@ import java.util.List;
 public class Institute {
 
     @Id
-    @Column(name = "institute_id", length = 36)
+    @Column(name = "institute_id", columnDefinition = "VARCHAR(36)")
     private String instituteId;
 
     @Column(name = "institute_name", nullable = false)

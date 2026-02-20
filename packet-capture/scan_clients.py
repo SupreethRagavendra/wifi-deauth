@@ -74,29 +74,28 @@ def get_device_name(mac_address):
     if mac_address in _vendor_cache:
         return _vendor_cache[mac_address]
     
-    # Try MacVendors API first
+    # Try maclookup.app API V2
     try:
         import urllib.request
         import urllib.error
         
-        api_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImp0aSI6IjFhYzE2MzQyLWViN2YtNDkzZS05NzM1LWU1YWNjNjYwMWYyZSJ9.eyJpc3MiOiJtYWN2ZW5kb3JzIiwiYXVkIjoibWFjdmVuZG9ycyIsImp0aSI6IjFhYzE2MzQyLWViN2YtNDkzZS05NzM1LWU1YWNjNjYwMWYyZSIsImlhdCI6MTc3MDUzMTQ1NywiZXhwIjoyMDg1MDI3NDU3LCJzdWIiOiIxNzE0MCIsInR5cCI6ImFjY2VzcyJ9.0hggi5DrBzQS88a3WEJ4BdRLC2C0G1AK6slX59DfFih0VXdCVjeljrNm_RKs6pEUzi6B-let0p6cC5eeH-z4iw"
+        # User provided API key
+        api_key = "01khra19fdej9n3j6p5q47g8m801khra1q5t4w4dmr032teqzjq6l0ueb5pomgk4"
         
-        url = f"https://api.macvendors.com/v1/lookup/{mac_address}"
+        url = f"https://api.maclookup.app/v2/macs/{mac_address}"
         req = urllib.request.Request(url)
-        req.add_header("Authorization", f"Bearer {api_token}")
-        req.add_header("Accept", "text/plain")
+        if api_key:
+            req.add_header("X-Authentication-Token", api_key) # Header name might vary, but this is common
+        req.add_header("Accept", "application/json")
         
-        with urllib.request.urlopen(req, timeout=1) as response:
-            vendor = response.read().decode('utf-8').strip()
-            if vendor and vendor != "Not Found":
+        with urllib.request.urlopen(req, timeout=2) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            if data.get("success") and data.get("found"):
+                vendor = data.get("company", "Unknown Vendor")
                 _vendor_cache[mac_address] = vendor
                 return vendor
-    except urllib.error.HTTPError as e:
-        sys.stderr.write(f"MacVendors API HTTP error for {mac_address}: {e.code}\n")
-    except urllib.error.URLError as e:
-        sys.stderr.write(f"MacVendors API URL error for {mac_address}: {str(e)}\n")
     except Exception as e:
-        sys.stderr.write(f"MacVendors API error for {mac_address}: {str(e)}\n")
+        sys.stderr.write(f"maclookup.app API error for {mac_address}: {str(e)}\n")
     
     # Fallback to local OUI database
     mac_upper = mac_address.upper()

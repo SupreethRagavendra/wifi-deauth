@@ -29,10 +29,15 @@ public class RateAnalyzer {
     private static final int SCORE_SUSPICIOUS = 70;
     private static final int SCORE_ATTACK = 100;
 
-    // Thresholds (packets in 5 second window)
-    private static final int THRESHOLD_NORMAL = 3; // <= 3 packets = normal
-    private static final int THRESHOLD_SLIGHTLY_SUSPICIOUS = 8; // 4-8 packets = suspicious
-    private static final int THRESHOLD_SUSPICIOUS = 15; // >= 15 packets = attack
+    // Thresholds (packets in 5 second window) - Configurable via properties
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.normal:10}")
+    private int thresholdNormal;
+
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.suspicious:20}")
+    private int thresholdSlightlySuspicious;
+
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.attack:50}")
+    private int thresholdAttack;
 
     /**
      * Analyzes Deauth frame rate in the last 5 seconds.
@@ -83,11 +88,11 @@ public class RateAnalyzer {
     }
 
     private int calculateScore(long frameCount) {
-        if (frameCount <= THRESHOLD_NORMAL) {
+        if (frameCount <= thresholdNormal) {
             return SCORE_NORMAL;
-        } else if (frameCount <= THRESHOLD_SLIGHTLY_SUSPICIOUS) {
+        } else if (frameCount <= thresholdSlightlySuspicious) {
             return SCORE_SLIGHTLY_SUSPICIOUS;
-        } else if (frameCount <= THRESHOLD_SUSPICIOUS) {
+        } else if (frameCount <= thresholdAttack) {
             return SCORE_SUSPICIOUS;
         } else {
             return SCORE_ATTACK;

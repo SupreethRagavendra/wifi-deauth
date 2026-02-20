@@ -19,13 +19,16 @@ import { Button } from '../components/ui';
 export const DetectionMonitor: React.FC = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const { alerts, connected } = useDetectionStatus();
+    const { latestAlert, connected } = useDetectionStatus();
 
     const [events, setEvents] = useState<DetectionEvent[]>([]);
     const [networks, setNetworks] = useState<WiFiNetwork[]>([]);
     const [selectedNetwork, setSelectedNetwork] = useState<string>('all');
     const [loading, setLoading] = useState(true);
     const [expandedEvent, setExpandedEvent] = useState<number | null>(null);
+    const [threatLevel, setThreatLevel] = useState('SAFE');
+    const [activeThreats, setActiveThreats] = useState(0);
+    const [underAttack, setUnderAttack] = useState(false);
 
     const handleLogout = () => {
         logout();
@@ -43,49 +46,70 @@ export const DetectionMonitor: React.FC = () => {
         fetchNetworks();
     }, []);
 
+    // Fetch threat level
+    const fetchThreatLevel = async () => {
+        const res = await detectionService.getThreatLevel();
+        if (res.success && res.data) {
+            setThreatLevel(res.data.threatLevel);
+            setActiveThreats(res.data.activeThreats);
+            setUnderAttack(res.data.underAttack);
+        }
+    };
+
     // Initial fetch of events
     useEffect(() => {
         const fetchInitialEvents = async () => {
-            const response = await detectionService.getRecentEvents();
-            if (response.success && response.data) {
-                setEvents(response.data);
-            }
-            setLoading(false);
+            await Promise.all([
+                fetchThreatLevel(),
+                (async () => {
+                    const response = await detectionService.getRecentEvents();
+                    if (response.success && response.data) {
+                        setEvents(response.data);
+                    }
+                    setLoading(false);
+                })()
+            ]);
         };
         fetchInitialEvents();
+
+        // Poll threat level every 3 seconds
+        const threatInterval = setInterval(fetchThreatLevel, 3000);
+        return () => clearInterval(threatInterval);
     }, []);
 
-    // Sync from SSE
+    // Sync incoming individual real-time events alongside the historical DB events
     useEffect(() => {
-        if (alerts.length > 0) {
-            const newEvents: DetectionEvent[] = alerts.map((alert: Alert) => ({
-                eventId: Math.floor(Math.random() * 1000000),
-                attackerMac: alert.attackerMac,
-                targetBssid: alert.targetBssid,
-                layer1Score: alert.packetCount,
-                severity: alert.severity as any,
-                detectedAt: alert.timestamp,
-                attackType: alert.type
-            }));
-
+        if (latestAlert) {
+            const newEvent: DetectionEvent = {
+                eventId: Math.floor(Math.random() * 1000000), // temp ID
+                attackerMac: latestAlert.attackerMac,
+                targetBssid: latestAlert.targetBssid,
+                layer1Score: latestAlert.packetCount,
+                severity: latestAlert.severity as any,
+                detectedAt: latestAlert.timestamp || new Date().toISOString(),
+                attackType: latestAlert.type
+            };
             setEvents(prev => {
-                const combined = [...newEvents];
-                prev.forEach(oldEvent => {
-                    if (!newEvents.some(ne => ne.detectedAt === oldEvent.detectedAt && ne.attackerMac === oldEvent.attackerMac)) {
-                        combined.push(oldEvent);
-                    }
-                });
-                return combined.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime()).slice(0, 50);
+                // Prevent duplicate fast-firing identical timestamps (optional safety)
+                if (prev.some(e => e.detectedAt === newEvent.detectedAt && e.attackerMac === newEvent.attackerMac)) {
+                    return prev;
+                }
+                return [newEvent, ...prev].slice(0, 1000); // keep up to 1000 items in memory
             });
         }
-    }, [alerts]);
+    }, [latestAlert]);
 
-    // Stats calculations
+    // Stats calculations - ACTIVE threats only (last 60 seconds)
     const stats = {
-        total: events.length,
+        total: events.length, // Only recent events now
+        active: events.filter(e => {
+            const eventTime = new Date(e.detectedAt).getTime();
+            const now = Date.now();
+            return (now - eventTime) < 60000; // Last 60 sec
+        }).length,
         normal: events.filter(e => e.severity === 'LOW').length,
-        suspicious: events.filter(e => e.severity === 'MEDIUM' || e.severity === 'HIGH').length,
-        attacks: events.filter(e => e.severity === 'CRITICAL').length,
+        suspicious: events.filter(e => e.severity === 'MEDIUM').length,
+        attacks: events.filter(e => e.severity === 'HIGH' || e.severity === 'CRITICAL').length,
     };
 
     const getSeverityColor = (severity: string) => {
@@ -157,6 +181,28 @@ export const DetectionMonitor: React.FC = () => {
 
             {/* Main Content */}
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                {/* Status Banner */}
+                {underAttack && (
+                    <div className="mb-8 p-4 rounded-xl border-2 bg-red-50 border-red-200">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <ShieldExclamationIcon className="h-8 w-8 text-red-600" />
+                                <div>
+                                    <h2 className="text-xl font-bold text-red-800">
+                                        🚨 UNDER ATTACK
+                                    </h2>
+                                    <p className="text-sm text-red-600">
+                                        Threat Level: {threatLevel} | Active Threats: {activeThreats}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                ATTACK DETECTED
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Title & Network Selector */}
                 <div className="mb-8 flex items-center justify-between">
                     <div>
@@ -186,8 +232,8 @@ export const DetectionMonitor: React.FC = () => {
                     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Events</p>
-                                <p className="mt-2 text-3xl font-bold text-gray-900">{stats.total}</p>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Active Events</p>
+                                <p className="mt-2 text-3xl font-bold text-gray-900">{stats.active}</p>
                             </div>
                             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
                                 <SignalIcon className="h-6 w-6 text-blue-600" />
@@ -283,9 +329,9 @@ export const DetectionMonitor: React.FC = () => {
                                                             : 'Normal Disconnect'}
                                                 </p>
                                                 <div className="mt-1 text-xs text-gray-500 font-mono">
-                                                    <span>Attacker: <span className="text-red-600">{event.attackerMac}</span></span>
+                                                    <span>Spoofed MAC: <span className="text-red-600 font-mono">{event.attackerMac}</span></span>
                                                     <span className="mx-2">|</span>
-                                                    <span>Target: {event.targetBssid}</span>
+                                                    <span>Target BSSID: <span className="font-mono bg-gray-100 px-1 rounded">{event.targetBssid}</span></span>
                                                     <span className="mx-2">|</span>
                                                     <span>Score: <span className="font-bold">{event.layer1Score}</span>/100</span>
                                                 </div>

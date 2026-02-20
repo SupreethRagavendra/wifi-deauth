@@ -201,7 +201,7 @@ public class WiFiController {
      */
     @GetMapping("/{id}/clients")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ConnectedClientResponse>> getConnectedClients(@PathVariable String id) {
+    public ResponseEntity<List<ConnectedClientResponse>> getConnectedClients(@PathVariable("id") String id) {
         WiFiNetwork network = wifiNetworkRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("WiFi Network", id));
 
@@ -216,7 +216,7 @@ public class WiFiController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = false)
-    public ResponseEntity<Map<String, String>> deleteWiFiNetwork(@PathVariable String id) {
+    public ResponseEntity<Map<String, String>> deleteWiFiNetwork(@PathVariable("id") String id) {
         logger.info("Delete request received for ID: {}", id);
         User user = getCurrentUser();
         Institute institute = user.getInstitute();

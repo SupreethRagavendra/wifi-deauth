@@ -32,7 +32,7 @@ public class User {
     private String userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "institute_id")
+    @JoinColumn(name = "institute_id", columnDefinition = "VARCHAR(36)")
     private Institute institute;
 
     @Column(name = "name", nullable = false)

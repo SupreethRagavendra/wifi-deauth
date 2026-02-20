@@ -24,3 +24,7 @@ wrapper/
 thumbs.db
 .gemini/
 .agent/
+wifi-security-backend/logs/
+*.log
+*.gz
+wifi-security-backend/bin/

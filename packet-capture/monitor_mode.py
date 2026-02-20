@@ -36,7 +36,7 @@ def enable_monitor_mode(interface: str) -> bool:
     # Check if already in monitor mode
     try:
         result = subprocess.run(['iwconfig', interface], capture_output=True, text=True)
-        if "Mode:Monitor" in result.stdout:
+        if "Mode:Monitor" in result.stdout or "Mode: Monitor" in result.stdout:
             print(f"{Fore.GREEN}Interface {interface} is already in monitor mode.{Style.RESET_ALL}")
             # Ensure it is UP to prevent 'Network is down' errors
             try:
@@ -81,6 +81,15 @@ def enable_monitor_mode(interface: str) -> bool:
 
         return True
     except subprocess.CalledProcessError as e:
+        # Re-check if it actually worked or was already fine despite the error
+        try:
+            result = subprocess.run(['iwconfig', interface], capture_output=True, text=True)
+            if "Mode:Monitor" in result.stdout or "Mode: Monitor" in result.stdout:
+                print(f"{Fore.GREEN}Interface {interface} is in monitor mode (despite error).{Style.RESET_ALL}")
+                return True
+        except:
+            pass
+            
         print(f"{Fore.RED}Failed to enable monitor mode on {interface}: {e}{Style.RESET_ALL}")
         return False
     except Exception as e:

@@ -37,10 +37,14 @@ public class SessionStateChecker {
     private static final int SCORE_SUSPICIOUS = 70;
     private static final int SCORE_ATTACK = 100;
 
-    // Session state analysis thresholds
-    private static final int MASS_DEAUTH_THRESHOLD = 5; // 5+ unique MACs deauth'd = mass attack
+    // Session state analysis thresholds - Configurable
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.session.mass-deauth-threshold:10}")
+    private int massDeauthThreshold;
+
     private static final int SESSION_WINDOW_SECONDS = 30; // Longer window for session context
-    private static final int ORPHAN_DEAUTH_THRESHOLD = 3; // Deauths without prior auth
+
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.session.orphan-deauth-threshold:10}")
+    private int orphanDeauthThreshold;
 
     // Frame types for 802.11
     private static final String FRAME_TYPE_DEAUTH = "DEAUTH";
@@ -164,18 +168,18 @@ public class SessionStateChecker {
         int score = 0;
 
         // Orphan deauths (deauth without session context)
-        if (orphanDeauths >= ORPHAN_DEAUTH_THRESHOLD * 2) {
+        if (orphanDeauths >= orphanDeauthThreshold * 2) {
             score += SCORE_ATTACK;
-        } else if (orphanDeauths >= ORPHAN_DEAUTH_THRESHOLD) {
+        } else if (orphanDeauths >= orphanDeauthThreshold) {
             score += SCORE_SUSPICIOUS;
-        } else if (orphanDeauths > 0) {
+        } else if (orphanDeauths >= 3) {
             score += SCORE_MINOR_ANOMALY;
         }
 
         // Mass deauth detection
-        if (massDeauthVictims >= MASS_DEAUTH_THRESHOLD * 2) {
+        if (massDeauthVictims >= massDeauthThreshold * 2) {
             score += SCORE_ATTACK;
-        } else if (massDeauthVictims >= MASS_DEAUTH_THRESHOLD) {
+        } else if (massDeauthVictims >= massDeauthThreshold) {
             score += SCORE_SUSPICIOUS;
         }
 

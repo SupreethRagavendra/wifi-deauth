@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * Entity representing the assignment of WiFi networks to Viewer users.
  */
 @Entity
-@Table(name = "user_wifi_mapping", uniqueConstraints = {
+@Table(name = "user_wifi_assignments", uniqueConstraints = {
         @UniqueConstraint(name = "unique_user_wifi", columnNames = { "user_id", "wifi_id" })
 })
 @Data

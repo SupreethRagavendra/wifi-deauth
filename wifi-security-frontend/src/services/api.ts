@@ -435,6 +435,27 @@ export const detectionService = {
         }
     },
 
+    // Get current threat level
+    async getThreatLevel(): Promise<ApiResponse<{
+        threatLevel: string;
+        activeThreats: number;
+        underAttack: boolean;
+        timestamp: string;
+    }>> {
+        try {
+            const response = await api.get('/detection/threat-level');
+            return {
+                success: true,
+                data: response.data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to fetch threat level',
+            };
+        }
+    },
+
     // Clear all detection events
     async clearEvents(): Promise<ApiResponse<void>> {
         try {

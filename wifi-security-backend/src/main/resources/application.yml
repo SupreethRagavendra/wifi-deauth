@@ -30,7 +30,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/wifi_security?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:Supreeth@123}
+    password: ${DB_PASSWORD:YOUR_LOCAL_PASSWORD_HERE}
     driver-class-name: com.mysql.cj.jdbc.Driver
     
     # HikariCP Connection Pool Configuration
@@ -108,7 +108,7 @@ detection:
     # Scoring thresholds (0-100 scale)
     attack-threshold: ${DETECTION_L1_ATTACK_THRESHOLD:50} # Score >= 50 = CRITICAL attack
     suspicious-threshold: ${DETECTION_L1_SUSPICIOUS_THRESHOLD:30} # Score >= 30 = HIGH suspicion
-    warning-threshold: ${DETECTION_L1_WARNING_THRESHOLD:60} # Only save events with score >= 60
+    warning-threshold: ${DETECTION_L1_WARNING_THRESHOLD:15} # Save events with score >= 15
     
     # Rate Analyzer settings
     rate-analyzer:

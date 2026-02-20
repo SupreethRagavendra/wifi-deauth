@@ -118,6 +118,8 @@ export interface DetectionEvent {
     severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
     detectedAt: string;
     details?: string;
+    mlConfidence?: number;
+    layer2Score?: number;
 }
 
 export interface ConnectedClient {

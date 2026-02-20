@@ -24,7 +24,7 @@ import java.util.Map;
 @Table(name = "detection_events", indexes = {
         @Index(name = "idx_event_detected_at", columnList = "detected_at DESC"),
         @Index(name = "idx_event_attacker", columnList = "attacker_mac, detected_at DESC"),
-        @Index(name = "idx_event_target", columnList = "target_mac, detected_at DESC"),
+        @Index(name = "idx_event_target", columnList = "victim_mac, detected_at DESC"),
         @Index(name = "idx_event_bssid", columnList = "target_bssid, detected_at DESC"),
         @Index(name = "idx_event_severity_time", columnList = "severity, detected_at DESC"),
         @Index(name = "idx_event_unack", columnList = "acknowledged, severity DESC, detected_at DESC"),
@@ -110,13 +110,13 @@ public class DetectionEvent {
     /**
      * Target MAC address (NULL for broadcast attacks).
      */
-    @Column(name = "target_mac", length = 17, columnDefinition = "CHAR(17)")
+    @Column(name = "victim_mac", nullable = false, length = 17, columnDefinition = "CHAR(17)")
     private String targetMac;
 
     /**
      * Targeted access point BSSID.
      */
-    @Column(name = "target_bssid", nullable = false, length = 17, columnDefinition = "CHAR(17)")
+    @Column(name = "target_bssid", length = 17, columnDefinition = "CHAR(17)")
     private String targetBssid;
 
     /**

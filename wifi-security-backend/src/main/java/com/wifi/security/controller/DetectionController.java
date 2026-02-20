@@ -5,6 +5,7 @@ import com.wifi.security.service.DetectionService;
 import com.wifi.security.service.AlertService;
 import com.wifi.security.service.layer1.Layer1Service;
 import com.wifi.security.entity.detection.DetectionEvent;
+import com.wifi.security.repository.DetectionEventRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.time.LocalDateTime;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,6 +36,9 @@ public class DetectionController {
     @Autowired
     private Layer1Service layer1Service;
 
+    @Autowired
+    private DetectionEventRepository eventRepository;
+
     @PostMapping("/alert")
     public ResponseEntity<?> receiveAlert(@RequestBody AlertDTO alert) {
         logger.warn("🚨 ALERT RECEIVED: type={} severity={} attacker={}",
@@ -46,9 +51,49 @@ public class DetectionController {
                 "type", alert.getType()));
     }
 
+    @GetMapping("/live-status")
+    public ResponseEntity<?> getLiveStatus() {
+        LocalDateTime cutoff15sec = LocalDateTime.now().minusSeconds(15);
+        LocalDateTime cutoff1hour = LocalDateTime.now().minusHours(1);
+
+        List<DetectionEvent> last15sec = eventRepository.findByDetectedAtAfter(cutoff15sec);
+        List<DetectionEvent> lastHour = eventRepository.findByDetectedAtAfter(cutoff1hour);
+
+        boolean underAttack = last15sec.stream()
+                .anyMatch(e -> e.getSeverity().name()
+                        .equals("CRITICAL") ||
+                        e.getSeverity().name().equals("HIGH"));
+
+        int activeThreats = (int) last15sec.stream()
+                .filter(e -> e.getSeverity().name()
+                        .equals("CRITICAL") ||
+                        e.getSeverity().name().equals("HIGH"))
+                .count();
+
+        return ResponseEntity.ok(Map.of(
+                "systemStatus", underAttack ? "UNSAFE" : "SAFE",
+                "activeThreats", activeThreats,
+                "threatsLastHour", (int) lastHour.stream()
+                        .filter(e -> e.getSeverity().name().equals("CRITICAL") || e.getSeverity().name().equals("HIGH"))
+                        .count(),
+                "underAttack", underAttack,
+                "timestamp", LocalDateTime.now().toString()));
+    }
+
     @GetMapping("/status")
     public ResponseEntity<?> getDetectionStatus() {
-        return ResponseEntity.ok(detectionService.getCurrentStatus());
+        Map<String, Object> status = new HashMap<>(detectionService.getCurrentStatus());
+
+        // Add real-time threat assessment
+        boolean underAttack = layer1Service.isCurrentlyUnderAttack();
+        List<DetectionEvent> activeThreats = layer1Service.getActiveThreats();
+
+        status.put("currentlyUnderAttack", underAttack);
+        status.put("activeThreats", activeThreats.size());
+        status.put("systemStatus", underAttack ? "UNSAFE" : "SAFE");
+        status.put("lastChecked", java.time.LocalDateTime.now().toString());
+
+        return ResponseEntity.ok(status);
     }
 
     @GetMapping("/alerts")
@@ -84,45 +129,12 @@ public class DetectionController {
 
         try {
             List<DetectionEvent> events = layer1Service.getRecentEvents();
-            if (events != null && !events.isEmpty()) {
-                logger.info("Returning {} detection events from database", events.size());
-                return ResponseEntity.ok(events);
-            }
-            logger.warn("Database detection events empty, checking in-memory alerts fallback");
+            logger.info("Returning {} detection events from database", events.size());
+            return ResponseEntity.ok(events != null ? events : List.of());
         } catch (Exception e) {
-            logger.error("Error fetching detection events: {}", e.getMessage());
+            logger.error("Error fetching events: {}", e.getMessage());
+            return ResponseEntity.ok(List.of());
         }
-
-        // Fallback to alerts if database query fails or is empty
-        List<AlertDTO> alerts = alertService.getRecentAlerts();
-        List<Map<String, Object>> events = new ArrayList<>();
-
-        for (AlertDTO alert : alerts) {
-            Map<String, Object> event = new HashMap<>();
-            event.put("eventId", eventIdCounter.getAndIncrement()); // Generate temporary ID
-            event.put("attackerMac", alert.getAttackerMac() != null ? alert.getAttackerMac() : "unknown");
-            event.put("targetBssid", alert.getTargetBssid() != null ? alert.getTargetBssid() : "unknown");
-            event.put("layer1Score", calculateScore(alert));
-            event.put("totalScore", calculateScore(alert));
-            event.put("severity", mapSeverity(alert.getSeverity()));
-            event.put("detectedAt", alert.getTimestamp() != null ? alert.getTimestamp() : Instant.now().toString());
-            event.put("attackType", alert.getType()); // Mapped to attackType enum string
-            event.put("message", alert.getMessage());
-            event.put("channel", alert.getChannel());
-            event.put("signal", alert.getSignal());
-            event.put("frameCount", alert.getPacketCount()); // Map packetCount to frameCount
-            // Add defaults for missing fields
-            event.put("confidence", 1.0);
-            event.put("layer2Score", 0);
-            event.put("layer3Score", 0);
-            event.put("alertSent", true);
-
-            events.add(event);
-        }
-
-        logger.info("Returning {} events from in-memory alerts fallback", events.size());
-        Collections.reverse(events);
-        return ResponseEntity.ok(events);
     }
 
     private int calculateScore(AlertDTO alert) {
@@ -154,6 +166,26 @@ public class DetectionController {
         return severity;
     }
 
+    @GetMapping("/threat-level")
+    public ResponseEntity<?> getCurrentThreatLevel() {
+        boolean underAttack = layer1Service.isCurrentlyUnderAttack();
+        int activeCount = layer1Service.getActiveThreats().size();
+
+        String level = "SAFE";
+        if (activeCount > 10)
+            level = "CRITICAL";
+        else if (activeCount > 5)
+            level = "HIGH";
+        else if (activeCount > 0)
+            level = "MEDIUM";
+
+        return ResponseEntity.ok(Map.of(
+                "threatLevel", level,
+                "activeThreats", activeCount,
+                "underAttack", underAttack,
+                "timestamp", Instant.now().toString()));
+    }
+
     // SSE endpoint for real-time updates to frontend
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamAlerts() {
@@ -168,7 +200,7 @@ public class DetectionController {
         try {
             emitter.send(SseEmitter.event()
                     .name("status")
-                    .data(detectionService.getCurrentStatus()));
+                    .data(getDetectionStatus().getBody()));
         } catch (Exception e) {
             logger.error("Error sending initial status: {}", e.getMessage());
         }

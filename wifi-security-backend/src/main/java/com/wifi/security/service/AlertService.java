@@ -27,7 +27,6 @@ public class AlertService {
             alert.setTimestamp(Instant.now().toString());
         }
 
-
         allAlerts.add(alert);
         activeAlerts.add(alert);
 
@@ -39,8 +38,13 @@ public class AlertService {
             activeAlerts.subList(0, 50).clear();
         }
 
-        logger.warn("🚨 Alert processed: {} - {} (severity: {})",
-                alert.getType(), alert.getMessage(), alert.getSeverity());
+        if ("HIGH".equals(alert.getSeverity()) || "CRITICAL".equals(alert.getSeverity())) {
+            logger.warn("🚨 Threat processed: {} - {} (severity: {})",
+                    alert.getType(), alert.getMessage(), alert.getSeverity());
+        } else {
+            logger.info("ℹ️ Activity recorded: {} - {} (severity: {})",
+                    alert.getType(), alert.getMessage(), alert.getSeverity());
+        }
 
         // Broadcast to all SSE clients
         broadcastAlert(alert);

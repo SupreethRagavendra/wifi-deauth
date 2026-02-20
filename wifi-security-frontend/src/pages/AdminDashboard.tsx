@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Button, Input, Select, Alert } from '../components/ui';
 import { wifiService, detectionService } from '../services/api';
 import { useDetectionStatus } from '../hooks/useDetectionStatus';
+import { useLiveStatus } from '../hooks/useLiveStatus';
 import { WiFiNetwork, SecurityType, WiFiNetworkRequest, WiFiScanResult, ConnectedClient } from '../types';
 import {
     ShieldCheckIcon,
@@ -33,7 +34,8 @@ const SECURITY_OPTIONS = [
 export const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
-    const { isUnderAttack, attackDetails, totalPackets, alerts, connected } = useDetectionStatus();
+    const { isUnderAttack, attackDetails, totalPackets, alerts, connected, totalThreats } = useDetectionStatus();
+    const { systemStatus, activeThreats, threatsLastHour, underAttack } = useLiveStatus();
 
     const [networks, setNetworks] = useState<WiFiNetwork[]>([]);
     const [loading, setLoading] = useState(true);
@@ -277,8 +279,8 @@ export const AdminDashboard: React.FC = () => {
 
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Threats Detected</p>
-                            <p className="mt-2 text-3xl font-bold text-red-600">{alerts.length}</p>
+                            <p className="text-sm font-medium text-gray-500">Threats Detected (1hr)</p>
+                            <p className="mt-2 text-3xl font-bold text-red-600">{threatsLastHour}</p>
                         </div>
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
                             <ShieldCheckIcon className="h-5 w-5 text-red-600" />
@@ -287,7 +289,7 @@ export const AdminDashboard: React.FC = () => {
 
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-500">System Status</p>
+                            <p className="text-sm font-medium text-gray-500">Connection</p>
                             <p className={`mt-2 text-2xl font-bold ${connected ? 'text-green-500' : 'text-orange-500'}`}>
                                 {connected ? 'Online' : 'Reconnecting...'}
                             </p>
@@ -523,8 +525,8 @@ export const AdminDashboard: React.FC = () => {
                                                             </span>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${isTargeted ? 'bg-red-100 text-red-800 animate-pulse' : 'bg-green-100 text-green-800'}`}>
-                                                                {isTargeted ? 'UNSAFE' : 'SAFE'}
+                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${underAttack ? 'bg-red-100 text-red-800 animate-pulse' : 'bg-green-100 text-green-800'}`}>
+                                                                {underAttack ? 'UNSAFE' : 'SAFE'}
                                                             </span>
                                                         </td>
                                                         <td

@@ -192,10 +192,8 @@ public class Layer1Service {
             log.info("Layer 1 analysis complete [Source: {}, Score: {}, Threat: {}, Time: {}ms]",
                     request.getSourceMac(), combinedScore, threatLevel, response.getProcessingTimeMs());
 
-            // NEW: Save anomaly to database if it exceeds threshold
-            if (combinedScore >= warningThreshold) {
-                saveAnomaly(response);
-            }
+            // NEW: Save all anomaly events to database permanently
+            saveAnomaly(response);
 
             return response;
 
@@ -225,15 +223,16 @@ public class Layer1Service {
      * Uses weighted average with emphasis on rate analysis.
      */
     private int calculateCombinedScore(int rateScore, int seqScore, int timeScore, int sessionScore) {
-        // Weighted scoring:
-        // - Rate Analysis: 30% (primary indicator)
-        // - Sequence Validation: 25% (strong indicator)
-        // - Time Anomaly: 25% (automation indicator)
-        // - Session State: 20% (context validation)
+        // Weighted scoring based on User Flowchart:
+        // - Rate Analysis: 35 pts
+        // - Sequence Validation: 25 pts
+        // - Time Anomaly: 15 pts
+        // - Session State: 20 pts
+        // Total max score: 95 pts
 
-        double weightedScore = (rateScore * 0.30) +
+        double weightedScore = (rateScore * 0.35) +
                 (seqScore * 0.25) +
-                (timeScore * 0.25) +
+                (timeScore * 0.15) +
                 (sessionScore * 0.20);
 
         return (int) Math.round(weightedScore);
@@ -249,10 +248,8 @@ public class Layer1Service {
             return "HIGH";
         } else if (score >= warningThreshold) {
             return "MEDIUM";
-        } else if (score > 0) {
-            return "LOW";
         }
-        return "NONE";
+        return "LOW";
     }
 
     /**
@@ -334,9 +331,7 @@ public class Layer1Service {
 
         analyzeBatch(requests).thenAccept(results -> {
             for (DetectionResponse r : results) {
-                if (r.getCombinedScore() >= warningThreshold) {
-                    saveAnomaly(r);
-                }
+                saveAnomaly(r);
             }
         });
     }
@@ -346,6 +341,7 @@ public class Layer1Service {
             com.wifi.security.entity.detection.DetectionEvent event = com.wifi.security.entity.detection.DetectionEvent
                     .builder()
                     .attackerMac(response.getSourceMac())
+                    .targetMac(response.getSourceMac()) // Use source MAC as target for deauth attacks
                     .targetBssid(response.getBssid())
                     .layer1Score(response.getCombinedScore())
                     .totalScore(response.getCombinedScore())
@@ -354,16 +350,41 @@ public class Layer1Service {
                     .detectedAt(response.getAnalysisTimestamp())
                     .attackStart(response.getAnalysisTimestamp())
                     .frameCount(1) // Single frame event
+                    .attackDurationMs(1000) // 1 second default
                     .build();
 
             eventRepository.save(event);
+            log.info("Saved detection event: source={}, score={}, severity={}",
+                    response.getSourceMac(), response.getCombinedScore(), response.getThreatLevel());
         } catch (Exception e) {
             log.error("Failed to save detection event", e);
         }
     }
 
     public java.util.List<com.wifi.security.entity.detection.DetectionEvent> getRecentEvents() {
-        return eventRepository.findTop20ByOrderByDetectedAtDesc();
+        return eventRepository.findTop100ByOrderByDetectedAtDesc();
+    }
+
+    public java.util.List<com.wifi.security.entity.detection.DetectionEvent> getActiveThreats() {
+        LocalDateTime cutoff = LocalDateTime.now().minusSeconds(30);
+        java.util.List<com.wifi.security.entity.detection.DetectionEvent> events = eventRepository
+                .findByDetectedAtAfterOrderByDetectedAtDesc(cutoff);
+        log.debug("Found {} active threats from last 30 seconds", events.size());
+        return events;
+    }
+
+    public boolean isCurrentlyUnderAttack() {
+        LocalDateTime cutoff = LocalDateTime.now().minusSeconds(15);
+        java.util.List<com.wifi.security.entity.detection.DetectionEvent> recent = eventRepository
+                .findByDetectedAtAfterOrderByDetectedAtDesc(cutoff);
+
+        boolean underAttack = recent.stream()
+                .anyMatch(e -> e.getSeverity().name().equals("CRITICAL") ||
+                        e.getSeverity().name().equals("HIGH"));
+
+        log.debug("Attack status check: {} critical/high events in last 15 seconds = {}",
+                recent.size(), underAttack);
+        return underAttack;
     }
 
     /**

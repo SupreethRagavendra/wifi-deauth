@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -31,43 +32,22 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
-    private final CorsConfigurationSource corsConfigurationSource;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-            UserDetailsService userDetailsService,
-            CorsConfigurationSource corsConfigurationSource) {
+            UserDetailsService userDetailsService) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
-        this.corsConfigurationSource = corsConfigurationSource;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF for REST API (stateless)
+                .cors(Customizer.withDefaults()) // Use bean named 'corsConfigurationSource' by default
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Enable CORS
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-
-                // Stateless session (JWT)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // Authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints - authentication
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        // Public endpoint - verify institute code
-                        .requestMatchers(HttpMethod.GET, "/api/institutes/*/verify").permitAll()
-
-                        // Packet Receiver API
+                        .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
                         .requestMatchers("/api/packets/**").permitAll()
-                        .requestMatchers("/api/packets/recent").permitAll()
-
-                        // Detection API endpoints (v1)
                         .requestMatchers("/api/detection/**").permitAll()
-                        .requestMatchers("/api/v1/detection/**").permitAll()
                         .requestMatchers("/api/v2/detection/**").authenticated()
 
                         // Actuator endpoints

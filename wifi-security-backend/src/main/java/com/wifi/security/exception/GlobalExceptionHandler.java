@@ -315,7 +315,8 @@ public class GlobalExceptionHandler {
 
                 ApiErrorResponse response = ApiErrorResponse.builder()
                                 .error("Internal Server Error")
-                                .message("An unexpected error occurred. Please try again later.")
+                                .message("An unexpected error occurred: " + ex.getClass().getName() + ": "
+                                                + ex.getMessage())
                                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                                 .timestamp(LocalDateTime.now())
                                 .path(request.getRequestURI())

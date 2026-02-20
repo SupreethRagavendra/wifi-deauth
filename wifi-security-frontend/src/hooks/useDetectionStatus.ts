@@ -25,11 +25,13 @@ export interface Alert {
 }
 
 export function useDetectionStatus() {
-    const [status, setStatus] = useState<string>('SAFE');
-    const [isUnderAttack, setIsUnderAttack] = useState<boolean>(false);
+    const [status, setStatus] = useState<'SAFE' | 'UNSAFE' | 'UNKNOWN'>('UNKNOWN');
+    const [isUnderAttack, setIsUnderAttack] = useState(false);
+    const [latestAlert, setLatestAlert] = useState<Alert | null>(null);
     const [attackDetails, setAttackDetails] = useState<AttackDetail[]>([]);
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [totalPackets, setTotalPackets] = useState<number>(0);
+    const [totalThreats, setTotalThreats] = useState<number>(0);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [connected, setConnected] = useState<boolean>(false);
     const eventSourceRef = useRef<EventSource | null>(null);
@@ -87,6 +89,9 @@ export function useDetectionStatus() {
         if (data.totalPackets !== undefined) {
             setTotalPackets(data.totalPackets);
         }
+        if (data.totalThreats !== undefined) {
+            setTotalThreats(data.totalThreats);
+        }
         if (data.lastUpdated) {
             setLastUpdated(data.lastUpdated);
         }
@@ -122,10 +127,11 @@ export function useDetectionStatus() {
             eventSource.addEventListener('alert', (event: MessageEvent) => {
                 try {
                     const alert = JSON.parse(event.data);
-                    console.log('SSE alert:', alert);
-                    setAlerts(prev => [...prev.slice(-49), alert]);
+                    // console.log('SSE alert:', alert);
+                    setLatestAlert(alert);
                     setIsUnderAttack(true);
                     setStatus('UNSAFE');
+                    setTotalThreats(prev => prev + 1); // Increment local counter on new alert
                 } catch (e) {
                     console.error('Failed to parse SSE alert:', e);
                 }
@@ -165,12 +171,14 @@ export function useDetectionStatus() {
 
     return {
         status,
+        latestAlert,
         isUnderAttack,
-        attackDetails,
-        alerts,
+        attackDetails, // Assuming 'activeThreats' was meant to be 'attackDetails'
+        totalThreats,
+        connected,
+        alerts, // Keep alerts for historical view
         totalPackets,
         lastUpdated,
-        connected,
         refresh: fetchStatus
     };
 }

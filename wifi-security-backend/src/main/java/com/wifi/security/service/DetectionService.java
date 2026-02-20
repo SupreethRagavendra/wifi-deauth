@@ -19,6 +19,20 @@ import java.util.stream.Collectors;
 @Service
 public class DetectionService {
 
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 2000)
+    public void periodicStatusUpdate() {
+        boolean wasAttacking = underAttack.get();
+        boolean isAttacking = isUnderAttack(); // This updates the state if timeout occurred
+
+        if (wasAttacking != isAttacking || isAttacking) {
+            try {
+                alertService.broadcastStatus(getCurrentStatus());
+            } catch (Exception e) {
+                // Ignore during shutdown
+            }
+        }
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(DetectionService.class);
 
     // Configuration
@@ -27,9 +41,13 @@ public class DetectionService {
     private static final long ATTACK_COOLDOWN_MS = 30000; // Attack flag stays for 30s after last packet
 
     // State
+    private final AtomicLong totalThreatsDetected = new AtomicLong(0);
     private final AtomicBoolean underAttack = new AtomicBoolean(false);
     private final AtomicLong totalPacketCount = new AtomicLong(0);
     private final AtomicLong lastAttackTime = new AtomicLong(0);
+
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.suspicious-threshold:40}")
+    private int suspiciousThreshold;
 
     // Packet tracking
     private final ConcurrentHashMap<String, List<Long>> deauthTimestamps = new ConcurrentHashMap<>();
@@ -142,24 +160,28 @@ public class DetectionService {
             // Layer 1 Analysis (Synchronous)
             com.wifi.security.dto.response.DetectionResponse response = layer1Service.analyze(request);
 
-            // Layer 2 Analysis (ML) - Only if score is ambiguous (e.g., 30-80) OR for research purposes
-            // For now, let's run it if score > 20 to gather data and prevent false negatives
-            if (response.getCombinedScore() >= 20) {
+            // Layer 2 Analysis (ML) - Only if score >= 40 (according to flowchart)
+            if (response.getCombinedScore() >= 40) {
                 try {
                     response = layer2Service.analyzeWithML(request, response);
                 } catch (Exception e) {
-                     logger.warn("Layer 2 ML ignored due to error: {}", e.getMessage());
+                    logger.warn("Layer 2 ML ignored due to error: {}", e.getMessage());
                 }
             }
 
             // Final Decision
             // If ML says ATTACK (Confidence > 75%), we force trigger
-            // OR if Layer 1 score is very high (> 80)
+            // OR if Layer 1 score is Suspicious (>= 40) or Attack (>= 75)
             boolean mlConfirmsAttack = response.getMlConfidence() != null && response.getMlConfidence() > 75.0;
-            boolean layer1ConfirmsAttack = response.getCombinedScore() >= 80;
+
+            // Allow Suspicious events (>= 40) to trigger the "Under Attack" / "Unsafe"
+            // state for visibility
+            boolean layer1ConfirmsAttack = response.getCombinedScore() >= suspiciousThreshold;
 
             if (mlConfirmsAttack || layer1ConfirmsAttack) {
                 triggerAttack(packet, response);
+            } else {
+                broadcastMinorEvent(packet, response);
             }
         } catch (Exception e) {
             logger.error("Error during Analysis: {}", e.getMessage());
@@ -170,6 +192,7 @@ public class DetectionService {
         long now = System.currentTimeMillis();
         lastAttackTime.set(now);
         boolean wasAlreadyAttacking = underAttack.getAndSet(true);
+        totalThreatsDetected.incrementAndGet();
 
         Map<String, Object> details = new HashMap<>();
         details.put("attackerMac", packet.getSrc());
@@ -199,7 +222,7 @@ public class DetectionService {
             AlertDTO alert = new AlertDTO();
             alert.setType("DEAUTH_FLOOD");
             alert.setSeverity(response.getThreatLevel());
-            alert.setMessage(String.format("Attack detected (Score: %d) from %s targeting %s",
+            alert.setMessage(String.format("Attack detected (Score: %d) - Spoofed Source: %s, Network BSSID: %s",
                     response.getCombinedScore(), packet.getSrc(), packet.getBssid()));
             alert.setAttackerMac(packet.getSrc());
             alert.setTargetBssid(packet.getBssid());
@@ -212,6 +235,27 @@ public class DetectionService {
             alertService.broadcastStatus(getCurrentStatus());
         } catch (Exception e) {
             logger.error("Failed to process alert: {}", e.getMessage());
+        }
+    }
+
+    private void broadcastMinorEvent(DeauthPacketDTO packet,
+            com.wifi.security.dto.response.DetectionResponse response) {
+        try {
+            AlertDTO alert = new AlertDTO();
+            alert.setType("DEAUTH_PACKET");
+            alert.setSeverity(response.getThreatLevel());
+            alert.setMessage(String.format("Deauth analyzed (Score: %d) - Source: %s, Network BSSID: %s",
+                    response.getCombinedScore(), packet.getSrc(), packet.getBssid()));
+            alert.setAttackerMac(packet.getSrc());
+            alert.setTargetBssid(packet.getBssid());
+            alert.setPacketCount(response.getCombinedScore());
+            alert.setSignal(packet.getSignal());
+            alert.setChannel(packet.getChannel());
+            alert.setTimestamp(Instant.now().toString());
+
+            alertService.processAlert(alert);
+        } catch (Exception e) {
+            logger.error("Failed to process minor alert: {}", e.getMessage());
         }
     }
 
@@ -234,6 +278,7 @@ public class DetectionService {
         status.put("status", attacking ? "UNSAFE" : "SAFE");
         status.put("isUnderAttack", attacking);
         status.put("totalPackets", totalPacketCount.get());
+        status.put("totalThreats", totalThreatsDetected.get());
         status.put("lastUpdated", Instant.now().toString());
 
         if (attacking) {
@@ -251,10 +296,46 @@ public class DetectionService {
         return totalPacketCount.get();
     }
 
+    public Map<String, Object> getStats(int windowSeconds) {
+        Map<String, Object> stats = new HashMap<>();
+
+        // Get time-windowed events from Layer1Service
+        java.time.LocalDateTime cutoff = java.time.LocalDateTime.now().minusSeconds(windowSeconds);
+        java.util.List<com.wifi.security.entity.detection.DetectionEvent> recentEvents = layer1Service
+                .getRecentEvents(); // This already gets last 60 seconds
+
+        // Filter events within the specified window
+        long windowStart = System.currentTimeMillis() - (windowSeconds * 1000);
+        java.util.List<com.wifi.security.entity.detection.DetectionEvent> windowedEvents = recentEvents.stream()
+                .filter(e -> e.getDetectedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()
+                        .toEpochMilli() >= windowStart)
+                .collect(java.util.stream.Collectors.toList());
+
+        stats.put("windowSeconds", windowSeconds);
+        stats.put("totalEvents", windowedEvents.size());
+        stats.put("criticalEvents", windowedEvents.stream()
+                .filter(e -> e.getSeverity() == com.wifi.security.entity.detection.DetectionEvent.Severity.CRITICAL)
+                .count());
+        stats.put("highEvents", windowedEvents.stream()
+                .filter(e -> e.getSeverity() == com.wifi.security.entity.detection.DetectionEvent.Severity.HIGH)
+                .count());
+        stats.put("mediumEvents", windowedEvents.stream()
+                .filter(e -> e.getSeverity() == com.wifi.security.entity.detection.DetectionEvent.Severity.MEDIUM)
+                .count());
+        stats.put("lowEvents", windowedEvents.stream()
+                .filter(e -> e.getSeverity() == com.wifi.security.entity.detection.DetectionEvent.Severity.LOW)
+                .count());
+        stats.put("isUnderAttack", isUnderAttack());
+        stats.put("lastUpdated", java.time.Instant.now().toString());
+
+        return stats;
+    }
+
     public void resetStats() {
         totalPacketCount.set(0);
         lastAttackTime.set(0);
         underAttack.set(false);
+        totalThreatsDetected.set(0);
         deauthTimestamps.clear();
         attackDetails.clear();
         recentPackets.clear();
