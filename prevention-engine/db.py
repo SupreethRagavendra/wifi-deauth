@@ -30,10 +30,10 @@ def _load_config():
 _db_cfg = _load_config()
 
 DB_CONFIG = {
-    "host":               os.getenv("DB_HOST",     _db_cfg.get("host", "your-db-host")),
-    "port":               int(os.getenv("DB_PORT", str(_db_cfg.get("port", 3306)))),
-    "user":               os.getenv("DB_USERNAME", _db_cfg.get("user", "db-user")),
-    "password":           os.getenv("DB_PASSWORD", _db_cfg.get("password", "db-pass")),
+    "host":               os.getenv("DB_HOST",     _db_cfg.get("host", "mysql-14d3f3be-supreethvennila-ef7e.i.aivencloud.com")),
+    "port":               int(os.getenv("DB_PORT", str(_db_cfg.get("port", 27574)))),
+    "user":               os.getenv("DB_USERNAME", _db_cfg.get("user", "avnadmin")),
+    "password":           os.getenv("DB_PASSWORD", _db_cfg.get("password", "AVNS_HRcY66WVAs6uUCoGIad")),
     "database":           os.getenv("DB_NAME",     _db_cfg.get("name", "wifi_deauth")),
     "ssl_ca":             None,
     "ssl_disabled":       _db_cfg.get("ssl_disabled", False),

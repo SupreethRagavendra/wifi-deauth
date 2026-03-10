@@ -30,7 +30,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/wifi_security?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:db-pass}
+    password: ${DB_PASSWORD:AVNS_yqpcvVA3yBkqC4udOzK}
     driver-class-name: com.mysql.cj.jdbc.Driver
     
     # HikariCP Connection Pool Configuration
