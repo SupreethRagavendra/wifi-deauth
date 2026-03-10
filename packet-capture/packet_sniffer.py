@@ -102,10 +102,7 @@ class PacketSniffer:
         self.sniff_thread.start()
         
     def stop(self):
-        """Stop sniffing"""
+        """Stop sniffing and wait for the thread to exit cleanly."""
         self.running = False
-        # Scapy sniff loop checks stop_filter or we can force it with timeout in a real implementation
-        # But stop_filter lambda above checks self.running
         if self.sniff_thread and self.sniff_thread.is_alive():
-            # Wait a bit for thread to join if needed, but daemon threads exit on app exit
-            pass
+            self.sniff_thread.join(timeout=3)  # wait for scapy to release the socket

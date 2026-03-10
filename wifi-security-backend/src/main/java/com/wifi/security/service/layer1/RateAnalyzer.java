@@ -29,14 +29,14 @@ public class RateAnalyzer {
     private static final int SCORE_SUSPICIOUS = 70;
     private static final int SCORE_ATTACK = 100;
 
-    // Thresholds (packets in 5 second window) - Configurable via properties
-    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.normal:10}")
+    // Thresholds (packets in 10 second window) - Configurable via properties
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.normal:2}")
     private int thresholdNormal;
 
-    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.suspicious:20}")
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.suspicious:5}")
     private int thresholdSlightlySuspicious;
 
-    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.attack:50}")
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.attack:10}")
     private int thresholdAttack;
 
     /**
@@ -51,10 +51,10 @@ public class RateAnalyzer {
         long startTime = System.nanoTime();
 
         try {
-            // Time window: Last 5 seconds
-            // Note: Converting Instant to LocalDateTime to match Entity field type
+            // Time window: Last 10 seconds (wider window catches bursts from earlier in the
+            // batch)
             LocalDateTime since = LocalDateTime.ofInstant(
-                    Instant.now().minus(5, ChronoUnit.SECONDS),
+                    Instant.now().minus(10, ChronoUnit.SECONDS),
                     ZoneId.systemDefault());
 
             // Query repository for frame count efficiently
@@ -89,11 +89,17 @@ public class RateAnalyzer {
 
     private int calculateScore(long frameCount) {
         if (frameCount <= thresholdNormal) {
-            return SCORE_NORMAL;
+            // Even 1-2 packets get a small score to avoid floor at 0
+            return frameCount > 0 ? 10 : SCORE_NORMAL;
         } else if (frameCount <= thresholdSlightlySuspicious) {
-            return SCORE_SLIGHTLY_SUSPICIOUS;
+            // Graduated: interpolate between 40-70 based on count
+            double ratio = (double) (frameCount - thresholdNormal) / (thresholdSlightlySuspicious - thresholdNormal);
+            return (int) (SCORE_SLIGHTLY_SUSPICIOUS + ratio * (SCORE_SUSPICIOUS - SCORE_SLIGHTLY_SUSPICIOUS));
         } else if (frameCount <= thresholdAttack) {
-            return SCORE_SUSPICIOUS;
+            // Graduated: interpolate between 70-100
+            double ratio = (double) (frameCount - thresholdSlightlySuspicious)
+                    / (thresholdAttack - thresholdSlightlySuspicious);
+            return (int) (SCORE_SUSPICIOUS + ratio * (SCORE_ATTACK - SCORE_SUSPICIOUS));
         } else {
             return SCORE_ATTACK;
         }

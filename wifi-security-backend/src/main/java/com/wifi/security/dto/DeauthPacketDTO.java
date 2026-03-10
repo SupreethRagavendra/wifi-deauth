@@ -20,4 +20,13 @@ public class DeauthPacketDTO {
     private String timestamp;
     private String interfaceName;
     private boolean test;
+
+    // ── RSSI Bimodal Clustering fields (from Python RSSITracker) ─────
+    private Boolean isSpoofed;
+    private String realAttackerMac;
+    private Integer attackerConfidence;
+    private Double rssiDeviation;
+    private Double apBaselineRssi;
+    private String detectionMethod;
+    private Integer scoreBoost; // RSSI-confirmed attacks boost the score
 }

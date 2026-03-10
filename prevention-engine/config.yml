@@ -1,0 +1,82 @@
+# ══════════════════════════════════════════════════════════════
+# Prevention Engine Configuration
+# ══════════════════════════════════════════════════════════════
+
+# ── Database (Aiven Cloud MySQL) ──
+database:
+  host: "mysql-14d3f3be-supreethvennila-ef7e.i.aivencloud.com"
+  port: 27574
+  user: "avnadmin"
+  password: "AVNS_HRcY66WVAs6uUCoGIad"
+  name: "wifi_deauth"
+  ssl_disabled: false
+  connection_timeout: 10
+  max_retries: 3
+  retry_delay: 2
+
+# ── Backend API ──
+backend:
+  url: "http://localhost:8080"
+  detection_endpoint: "/api/detection/events/recent"
+
+# ── Engine Settings ──
+engine:
+  port: 5002
+  poll_interval: 3        # seconds between detection API polls
+  ping_count: 3           # pings for latency measurement
+
+# ── Confidence Thresholds ──
+thresholds:
+  level1: 40              # >= 40% fires Level 1
+  level2: 60              # >= 60% fires Level 2
+  level3: 85              # >= 85% fires Level 3
+
+# ── Network (Real network to protect) ──
+network:
+  interface: "wlan0"          # monitoring interface
+  ssid: "supreeth"
+  ap_mac: "9E:A8:2C:C2:1F:D9"
+  client_mac: "4C:6F:9C:F4:FA:63"
+  channel: 11
+
+# ── Honeypot Settings (Dual-Layer: Fake APs + Perfect Clones) ──
+honeypot:
+  interface: "wlan1"                # dedicated honeypot interface (separate from monitoring)
+  fake_ap_count: 150           # Fake APs with similar SSIDs (beacon flood)
+  beacon_interval_ms: 20       # Beacon broadcast interval per batch
+  num_clones: 15               # Near-identical MAC clones of real client
+  real_client_rssi: -52        # Measured RSSI of real client
+  rssi_variance: 8             # Clone RSSI ± this value
+  silent_protection_fps: 1500  # Invisible reassoc rate for real client
+  decoy_visible_fps: 50        # Visible frame rate per clone (shows in airodump)
+  ssid_variants:               # First 15 fake AP SSIDs (rest auto-generated)
+    - "supreeth_guest"
+    - "supreeth_5G"
+    - "supreeth_ext"
+    - "supreeth_2G"
+    - "supreeth_office"
+    - "SUPREETH"
+    - "supreeth-5ghz"
+    - "supreeth_IoT"
+    - "supreeth_backup"
+    - "supreeth_secure"
+    - "supreeth_WiFi"
+    - "supreeth_home"
+    - "supreeth_net"
+    - "supreeth-secure"
+    - "supreeth_vpn"
+
+# ── Forensics Settings ──
+forensics:
+  capture_dir: "/var/log/wifi_defense/attacks"
+  report_dir: "/var/log/wifi_defense/reports"
+  packet_count: 600
+  capture_timeout: 60     # seconds
+
+# ── Logging ──
+logging:
+  dir: "logs"
+  engine_log: "engine.log"
+  components_log: "components.log"
+  honeypot_log: "honeypot.log"
+  forensics_log: "forensics.log"

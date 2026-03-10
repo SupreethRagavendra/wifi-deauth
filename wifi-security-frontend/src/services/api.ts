@@ -63,6 +63,7 @@ const api: AxiosInstance = axios.create({
     timeout: 30000,
 });
 
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
     (config) => {
@@ -472,5 +473,6 @@ export const detectionService = {
         }
     }
 };
+
 
 export default api;

@@ -24,7 +24,7 @@ const accountTypeOptions: RadioOption[] = [
         value: 'viewer',
         label: 'Organization Viewer',
         description:
-            'Join an existing organization using an invite code to monitor network activity.',
+            'Join an existing organization using an invite code to access your protected dashboard.',
         icon: <UserGroupIcon className="h-6 w-6" />,
     },
     {

@@ -5,6 +5,7 @@ import com.wifi.security.dto.response.DetectionResponse;
 import com.wifi.security.entity.CapturedPacket;
 import com.wifi.security.repository.PacketRepository;
 import com.wifi.security.repository.DetectionEventRepository;
+import com.wifi.security.service.AlertService;
 import com.wifi.security.service.layer1.*;
 import com.wifi.security.util.CapturedPacketBuilder;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -51,6 +52,12 @@ class Layer1PerformanceTest {
     @Mock
     private DetectionEventRepository eventRepository;
 
+    @Mock
+    private AlertService alertService; // Added AlertService mock
+
+    @Mock
+    private com.wifi.security.repository.WiFiNetworkRepository wifiNetworkRepository;
+
     private String testSourceMac = "00:11:22:33:44:55";
     private String testBssid = "AA:BB:CC:DD:EE:FF";
 
@@ -66,7 +73,9 @@ class Layer1PerformanceTest {
                 timeAnomalyDetector,
                 sessionStateChecker,
                 new SimpleMeterRegistry(),
-                eventRepository);
+                eventRepository,
+                alertService,
+                wifiNetworkRepository); // Passed dependencies to constructor
         layer1Service.initMetrics();
 
         // Setup mock responses for realistic simulation

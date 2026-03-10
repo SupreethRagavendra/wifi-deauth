@@ -42,4 +42,9 @@ public interface UserRepository extends JpaRepository<User, String> {
      * Find all users in an institute.
      */
     List<User> findByInstitute(Institute institute);
+
+    /**
+     * Find a user by their registered MAC address.
+     */
+    Optional<User> findByMacAddress(String macAddress);
 }

@@ -9,7 +9,7 @@ The system is built as a distributed application with three main components work
 1.  **Packet Capture Engine (The "Eyes")**:
     *   Written in **Python**.
     *   Uses **Scapy** and **Airodump-ng**.
-    *   Listens to raw WiFi frames (Layer 2) from the monitor interface (e.g., `wlan0mon`).
+    *   Listens to raw WiFi frames (Layer 2) from the monitor interface (e.g., `wlan1`).
     *   Filters specifically for Management Frames (Type 0), focusing on Deauthentication (Subtype 12) and Disassociation (Subtype 10) frames.
     *   Forwards captured packet metadata to the Backend via HTTP REST API.
 
@@ -114,7 +114,7 @@ npm start    # Starts the UI server on port 3000
 ```bash
 # In /packet-capture
 # First, enable monitor mode (e.g., airmon-ng start wlan0)
-sudo python3 sniffer.py --interface wlan0mon
+sudo python3 sniffer.py --interface wlan1
 ```
 
 ---

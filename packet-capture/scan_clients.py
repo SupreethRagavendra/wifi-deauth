@@ -88,14 +88,14 @@ def get_device_name(mac_address):
             req.add_header("X-Authentication-Token", api_key) # Header name might vary, but this is common
         req.add_header("Accept", "application/json")
         
-        with urllib.request.urlopen(req, timeout=2) as response:
+        with urllib.request.urlopen(req, timeout=0.5) as response:
             data = json.loads(response.read().decode('utf-8'))
             if data.get("success") and data.get("found"):
                 vendor = data.get("company", "Unknown Vendor")
                 _vendor_cache[mac_address] = vendor
                 return vendor
     except Exception as e:
-        sys.stderr.write(f"maclookup.app API error for {mac_address}: {str(e)}\n")
+        pass # Ignore API timeout and fallback to local OUI
     
     # Fallback to local OUI database
     mac_upper = mac_address.upper()
@@ -112,38 +112,32 @@ def get_device_name(mac_address):
     
     return "Unknown Device"
 
+_arp_cache = {}
+_arp_loaded = False
+
+def load_arp_cache():
+    global _arp_loaded
+    try:
+        with open('/proc/net/arp', 'r') as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 4 and parts[0].count('.') == 3:
+                    ip = parts[0]
+                    mac = parts[3].upper()
+                    _arp_cache[mac] = ip
+    except Exception as e:
+        sys.stderr.write(f"Failed to load ARP cache: {e}\n")
+    _arp_loaded = True
+
 def get_ip_from_mac(mac_address):
     """
-    Try to get IP address for a MAC address using ARP table and nmap.
+    Try to get IP address for a MAC address using ARP table.
     Returns IP address or '-' if not found.
     """
-    try:
-        # Method 1: Read ARP table
-        result = subprocess.run(['arp', '-n'], capture_output=True, text=True, timeout=2)
-        if result.returncode == 0:
-            # Parse ARP output
-            for line in result.stdout.split('\n'):
-                if mac_address.lower() in line.lower():
-                    # Extract IP address (first column)
-                    parts = line.split()
-                    if len(parts) >= 1 and parts[0].count('.') == 3:
-                        return parts[0]
+    if not _arp_loaded:
+        load_arp_cache()
         
-        # Method 2: Try reading /proc/net/arp (Linux specific)
-        try:
-            with open('/proc/net/arp', 'r') as f:
-                for line in f:
-                    if mac_address.lower() in line.lower():
-                        parts = line.split()
-                        if len(parts) >= 1 and parts[0].count('.') == 3:
-                            return parts[0]
-        except:
-            pass
-            
-    except Exception as e:
-        sys.stderr.write(f"Error getting IP for {mac_address}: {str(e)}\n")
-    
-    return "-"
+    return _arp_cache.get(mac_address.upper(), "-")
 
 def scan_clients(interface, bssid, duration=10, channel=None):
     # Use PID to avoid collision if multiple scans happen
@@ -264,7 +258,7 @@ if __name__ == "__main__":
     parser.add_argument("--interface", default="wlan0mon", help="Wireless interface in monitor mode")
     parser.add_argument("--bssid", required=True, help="Target Access Point BSSID")
     parser.add_argument("--channel", help="Channel of the AP")
-    parser.add_argument("--duration", type=int, default=10, help="Scan duration in seconds")
+    parser.add_argument("--duration", type=int, default=6, help="Scan duration in seconds")
     args = parser.parse_args()
     
     results = scan_clients(args.interface, args.bssid, args.duration, args.channel)

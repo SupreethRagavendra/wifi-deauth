@@ -12,4 +12,6 @@ public class PacketDTO {
     private Integer rssi;
     private LocalDateTime timestamp;
     private String frameType;
+    private String realAttackerMac;
+    private Boolean isSpoofed;
 }

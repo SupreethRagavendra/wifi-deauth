@@ -1,0 +1,19 @@
+{
+    "target_ap_mac": "9E:A8:2C:C2:1F:D9",
+    "trusted_device_macs": [
+        "4C:6F:9C:F4:FA:63",
+        "94:65:2D:97:25:87",
+        "94:65:2D:97:25:86",
+        "94:65:2D:97:25:88"
+    ],
+    "victim_mac": "4C:6F:9C:F4:FA:63",
+    "victim_ip": "10.141.107.102",
+    "wifi_channel": 11,
+    "monitor_interface": "wlan1mon",
+    "baseline_beacon_count": 20,
+    "baseline_timeout_seconds": 15,
+    "rssi_min_sigma": 6,
+    "correlation_time_window_sec": 2.0,
+    "correlation_rssi_max_diff_db": 20,
+    "min_attacker_confidence": 50
+}

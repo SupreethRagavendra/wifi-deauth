@@ -10,6 +10,11 @@ export interface User {
     role: UserRole;
     instituteName?: string;
     instituteCode?: string;
+    macAddress?: string;
+    wifiAdapter?: string;
+    phoneNumber?: string;
+    alertsEmail?: boolean;
+    alertsSms?: boolean;
     createdAt: string;
 }
 
@@ -120,6 +125,21 @@ export interface DetectionEvent {
     details?: string;
     mlConfidence?: number;
     layer2Score?: number;
+    layer3Score?: number;
+    layer3Notes?: string;
+    totalScore?: number;
+    mlPrediction?: string;
+    modelAgreement?: string;
+    rateAnalyzerScore?: number;
+    seqValidatorScore?: number;
+    timeAnomalyScore?: number;
+    sessionStateScore?: number;
+    // Attacker identification (Issue 3)
+    realAttackerMac?: string;
+    isSpoofed?: boolean;
+    attackerConfidence?: number;
+    rssiDeviation?: number;
+    detectionMethod?: string;
 }
 
 export interface ConnectedClient {
@@ -128,4 +148,11 @@ export interface ConnectedClient {
     connectionTime: string;
     signalStrength?: string;
     ipAddress?: string;
+}
+
+
+
+
+export interface SystemConfig {
+    [key: string]: string;
 }

@@ -1,6 +1,34 @@
-nohup: ignoring input
---> Starting Backend (MySQL) - WITH SUDO FOR SCANNING...
-cd wifi-security-backend && sudo ./mvnw spring-boot:run
-sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
-sudo: a password is required
-make: *** [Makefile:47: run-backend] Terminated
+--> Starting Backend (MySQL) - WITHOUT SUDO...
+cd wifi-security-backend && ./mvnw spring-boot:run
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------< com.wifi.security:wifi-security-backend >---------------
+[INFO] Building wifi-security-backend 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.2.1:run (default-cli) > test-compile @ wifi-security-backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ wifi-security-backend ---
+[INFO] Copying 3 resources from src/main/resources to target/classes
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ wifi-security-backend ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ wifi-security-backend ---
+[INFO] Copying 1 resource from src/test/resources to target/test-classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.118 s
+[INFO] Finished at: 2026-03-06T13:43:48+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-resources-plugin:3.3.1:testResources (default-testResources) on project wifi-security-backend: copying /home/supreeth/wif-deauth/wifi-security-backend/src/test/resources/application-test.properties to /home/supreeth/wif-deauth/wifi-security-backend/target/test-classes/application-test.properties failed with FileSystemException: /home/supreeth/wif-deauth/wifi-security-backend/target/test-classes/application-test.properties: Operation not permitted -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+make: *** [Makefile:83: run-backend] Error 1

@@ -6,6 +6,7 @@ import { wifiService, detectionService } from '../services/api';
 import { useDetectionStatus } from '../hooks/useDetectionStatus';
 import { useLiveStatus } from '../hooks/useLiveStatus';
 import { WiFiNetwork, SecurityType, WiFiNetworkRequest, WiFiScanResult, ConnectedClient } from '../types';
+import { AppNavbar } from '../components/layout/AppNavbar';
 import {
     ShieldCheckIcon,
     UserGroupIcon,
@@ -31,10 +32,11 @@ const SECURITY_OPTIONS = [
     { value: 'WPA2_ENTERPRISE', label: 'WPA2 Enterprise' },
 ];
 
+
 export const AdminDashboard: React.FC = () => {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
-    const { isUnderAttack, attackDetails, totalPackets, alerts, connected, totalThreats } = useDetectionStatus();
+    const { user } = useAuth();
+    const { isUnderAttack, attackDetails, totalPackets, connected } = useDetectionStatus();
     const { systemStatus, activeThreats, threatsLastHour, underAttack } = useLiveStatus();
 
     const [networks, setNetworks] = useState<WiFiNetwork[]>([]);
@@ -57,6 +59,10 @@ export const AdminDashboard: React.FC = () => {
 
     // Detection feed refresh trigger
     const [feedRefreshTrigger, setFeedRefreshTrigger] = useState(0);
+    const [clearing, setClearing] = useState(false);
+    const [clearSuccess, setClearSuccess] = useState(false);
+
+
 
     const getClientsForNetwork = (networkId: string): ConnectedClient[] => {
         return networkClients[networkId] || [];
@@ -120,11 +126,6 @@ export const AdminDashboard: React.FC = () => {
         setLoading(false);
     };
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
-
     const handleDelete = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this network?')) {
             const response = await wifiService.deleteNetwork(id);
@@ -162,17 +163,25 @@ export const AdminDashboard: React.FC = () => {
     const handleScan = async () => {
         setIsScanning(true);
         setFormError(null);
-        const response = await wifiService.scanNetworks();
+
+        // First attempt
+        let response = await wifiService.scanNetworks();
+
+        // Auto-retry once if empty (interface may not be ready on first call)
+        if (response.success && response.data && response.data.length === 0) {
+            await new Promise(res => setTimeout(res, 1500));
+            response = await wifiService.scanNetworks();
+        }
 
         if (response.success && response.data) {
             setScanResults(response.data);
             if (response.data.length > 0) {
                 setShowScanResults(true);
             } else {
-                setFormError('No networks found nearby.');
+                setFormError('No networks detected. The wireless interface may not be active. Try scanning again or add a network manually using its SSID and BSSID.');
             }
         } else {
-            setFormError(response.error || 'Scan failed');
+            setFormError(response.error || 'Scan failed. Please try again.');
         }
         setIsScanning(false);
     };
@@ -180,50 +189,21 @@ export const AdminDashboard: React.FC = () => {
     const selectScanResult = (result: WiFiScanResult) => {
         // Auto-fill form
         setFormData({
-            ...formData,
             ssid: result.ssid,
             bssid: result.bssid,
             channel: result.channel,
             securityType: (result.securityType as SecurityType) || 'WPA2', // Fallback
+            location: '',
         });
+        setShowAddForm(true);
         setShowScanResults(false);
     };
 
+
+
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-200">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-                                <ShieldCheckIcon className="h-5 w-5 text-white" />
-                            </div>
-                            <span className="text-xl font-bold text-gray-900">
-                                WiFi Shield
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm text-gray-500">
-                                Welcome, <span className="font-semibold text-gray-900">{user?.name}</span>
-                            </span>
-                            <button
-                                onClick={() => navigate('/detection-monitor')}
-                                className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                            >
-                                Detection Monitor
-                            </button>
-                            <button
-                                onClick={handleLogout}
-                                className="text-sm font-medium text-gray-500 hover:text-gray-900"
-                            >
-                                Logout
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <AppNavbar isUnderAttack={isUnderAttack} />
 
             {/* Main Content */}
             <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -237,7 +217,7 @@ export const AdminDashboard: React.FC = () => {
                 {user?.instituteName && (
                     <div className="mb-8 rounded-xl bg-white p-6 shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-400 font-mono">
                                 INSTITUTION
                             </p>
                             <h2 className="mt-1 text-2xl font-bold text-gray-900">
@@ -259,7 +239,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-10">
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Registered Networks</p>
+                            <p className="text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">Registered Networks</p>
                             <p className="mt-2 text-3xl font-bold text-gray-900">{networks.length}</p>
                         </div>
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
@@ -269,7 +249,7 @@ export const AdminDashboard: React.FC = () => {
 
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Total Packets Analyzed</p>
+                            <p className="text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">Total Packets Analyzed</p>
                             <p className="mt-2 text-3xl font-bold text-gray-900">{totalPackets.toLocaleString()}</p>
                         </div>
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
@@ -279,7 +259,7 @@ export const AdminDashboard: React.FC = () => {
 
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Threats Detected (1hr)</p>
+                            <p className="text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">Attacks Detected (1hr)</p>
                             <p className="mt-2 text-3xl font-bold text-red-600">{threatsLastHour}</p>
                         </div>
                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50">
@@ -289,7 +269,7 @@ export const AdminDashboard: React.FC = () => {
 
                     <div className="rounded-xl bg-white p-6 shadow-sm border border-gray-100 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Connection</p>
+                            <p className="text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">Connection</p>
                             <p className={`mt-2 text-2xl font-bold ${connected ? 'text-green-500' : 'text-orange-500'}`}>
                                 {connected ? 'Online' : 'Reconnecting...'}
                             </p>
@@ -369,7 +349,7 @@ export const AdminDashboard: React.FC = () => {
                                     {/* Scan Results Dropdown */}
                                     {showScanResults && scanResults.length > 0 && (
                                         <div className="mb-6 border rounded-xl overflow-hidden border-gray-200 shadow-lg animate-fade-in">
-                                            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-medium text-xs uppercase tracking-wider text-gray-500 flex justify-between items-center">
+                                            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 font-semibold text-[11px] uppercase tracking-[0.2em] text-gray-500 font-mono flex justify-between items-center">
                                                 <span>Detected Networks ({scanResults.length})</span>
                                                 <button onClick={() => setShowScanResults(false)} className="text-blue-600 hover:text-blue-800">Close</button>
                                             </div>
@@ -474,12 +454,12 @@ export const AdminDashboard: React.FC = () => {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th scope="col" className="w-10 px-3 py-3"></th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">SSID</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">BSSID</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Security</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Clients</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th scope="col" className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.2em] font-mono">SSID</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.2em] font-mono">BSSID</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.2em] font-mono">Security</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.2em] font-mono">Clients</th>
+                                        <th scope="col" className="px-6 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.2em] font-mono">Status</th>
+                                        <th scope="col" className="px-6 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-[0.2em] font-mono">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -580,11 +560,11 @@ export const AdminDashboard: React.FC = () => {
                                                                             <table className="min-w-full divide-y divide-gray-200">
                                                                                 <thead className="bg-gray-100">
                                                                                     <tr>
-                                                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Device</th>
-                                                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">MAC Address</th>
-                                                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">IP Address</th>
-                                                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Signal</th>
-                                                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Connected Since</th>
+                                                                                        <th className="px-4 py-2 text-left text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">Device</th>
+                                                                                        <th className="px-4 py-2 text-left text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">MAC Address</th>
+                                                                                        <th className="px-4 py-2 text-left text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">IP Address</th>
+                                                                                        <th className="px-4 py-2 text-left text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">Signal</th>
+                                                                                        <th className="px-4 py-2 text-left text-[11px] font-semibold text-gray-500 font-mono uppercase tracking-[0.2em]">Connected Since</th>
                                                                                     </tr>
                                                                                 </thead>
                                                                                 <tbody className="divide-y divide-gray-100">
@@ -635,13 +615,17 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                 </div>
 
+
                 {/* Detection Feed Section (Module 3 Integration) */}
                 <div>
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-bold text-gray-900">Recent Deauth Packets (Last Hour)</h3>
                         <button
+                            disabled={clearing}
                             onClick={async () => {
                                 if (window.confirm('Are you sure you want to clear all detection history?')) {
+                                    setClearing(true);
+                                    setClearSuccess(false);
                                     try {
                                         const response = await detectionService.clearEvents();
                                         if (response.success) {
@@ -649,6 +633,8 @@ export const AdminDashboard: React.FC = () => {
                                             // Trigger feed refresh instead of full page reload
                                             setFeedRefreshTrigger(prev => prev + 1);
                                             setError(null);
+                                            setClearSuccess(true);
+                                            setTimeout(() => setClearSuccess(false), 2000);
                                         } else {
                                             console.error('❌ Failed to clear events:', response.error);
                                             setError(response.error || 'Failed to clear detection history');
@@ -656,18 +642,37 @@ export const AdminDashboard: React.FC = () => {
                                     } catch (err) {
                                         console.error('❌ Exception clearing events:', err);
                                         setError('Failed to clear detection history. Please check if the backend is running.');
+                                    } finally {
+                                        setClearing(false);
                                     }
                                 }
                             }}
-                            className="text-sm text-red-600 hover:text-red-800 font-medium px-3 py-1 border border-red-200 rounded hover:bg-red-50 transition-colors"
+                            className={`text-sm font-medium px-3 py-1 border rounded transition-colors flex items-center gap-1.5 ${clearSuccess
+                                ? 'text-green-600 border-green-300 bg-green-50'
+                                : clearing
+                                    ? 'text-gray-400 border-gray-200 bg-gray-50 cursor-not-allowed'
+                                    : 'text-red-600 hover:text-red-800 border-red-200 hover:bg-red-50'
+                                }`}
                         >
-                            Clear History
+                            {clearing ? (
+                                <>
+                                    <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
+                                    Clearing...
+                                </>
+                            ) : clearSuccess ? (
+                                <>
+                                    <CheckCircleIcon className="h-3.5 w-3.5" />
+                                    Cleared
+                                </>
+                            ) : (
+                                'Clear History'
+                            )}
                         </button>
                     </div>
                     <DetectionFeed refreshTrigger={feedRefreshTrigger} />
                 </div>
             </main>
-        </div>
+        </div >
     );
 };
 

@@ -20,9 +20,20 @@ export interface Alert {
     message: string;
     attackerMac: string;
     targetBssid: string;
+    targetMac?: string;
     packetCount: number;
+    score?: number;
     timestamp: string;
+    eventId?: number;
+    layer2Score?: number;
+    layer3Score?: number;
+    mlConfidence?: number;
+    mlPrediction?: string;
+    modelAgreement?: string;
+    isSpoofed?: boolean;
+    realAttackerMac?: string;
 }
+
 
 export function useDetectionStatus() {
     const [status, setStatus] = useState<'SAFE' | 'UNSAFE' | 'UNKNOWN'>('UNKNOWN');
@@ -131,7 +142,7 @@ export function useDetectionStatus() {
                     setLatestAlert(alert);
                     setIsUnderAttack(true);
                     setStatus('UNSAFE');
-                    setTotalThreats(prev => prev + 1); // Increment local counter on new alert
+                    // Don't increment locally — backend sends authoritative count via status polling
                 } catch (e) {
                     console.error('Failed to parse SSE alert:', e);
                 }

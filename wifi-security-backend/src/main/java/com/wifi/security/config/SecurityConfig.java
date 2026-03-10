@@ -48,6 +48,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
                         .requestMatchers("/api/packets/**").permitAll()
                         .requestMatchers("/api/detection/**").permitAll()
+                        .requestMatchers("/api/alerts/**").permitAll()
+                        .requestMatchers("/api/forensics/**").permitAll()
                         .requestMatchers("/api/v2/detection/**").authenticated()
 
                         // Actuator endpoints

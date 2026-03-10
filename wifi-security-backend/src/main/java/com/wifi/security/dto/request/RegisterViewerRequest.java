@@ -31,4 +31,7 @@ public class RegisterViewerRequest {
     @Size(min = 8, message = "Password must be at least 8 characters")
     @Pattern(regexp = "^(?=.*[A-Z])(?=.*[0-9]).{8,}$", message = "Password must contain at least 1 uppercase letter and 1 number")
     private String password;
+
+    @Pattern(regexp = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$", message = "Invalid MAC address format")
+    private String macAddress;
 }

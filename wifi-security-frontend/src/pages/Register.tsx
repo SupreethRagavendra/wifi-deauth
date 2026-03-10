@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../components/layout/AuthLayout';
-import {
-    AccountTypeSelector,
-    InstituteAdminForm,
-    ViewerRegistrationForm,
-    HomeUserForm,
-    InstituteCodeSuccess,
-} from '../components/auth';
+import { AccountTypeSelector } from '../components/auth/AccountTypeSelector';
+import { InstituteAdminForm } from '../components/auth/InstituteAdminForm';
+import { ViewerRegistrationForm } from '../components/auth/ViewerRegistrationForm';
+import { HomeUserForm } from '../components/auth/HomeUserForm';
+import { InstituteCodeSuccess } from '../components/auth/InstituteCodeSuccess';
 import { Alert } from '../components/ui';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/api';

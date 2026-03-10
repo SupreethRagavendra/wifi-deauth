@@ -25,7 +25,7 @@ public class DetectedAnomaly {
     private ScanResult scanResult;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "institute_id", nullable = false)
+    @JoinColumn(name = "institute_id", nullable = false, columnDefinition = "VARCHAR(36)")
     private Institute institute;
 
     @Enumerated(EnumType.STRING)

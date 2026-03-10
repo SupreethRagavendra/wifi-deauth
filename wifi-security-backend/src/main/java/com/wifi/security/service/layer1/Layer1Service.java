@@ -4,6 +4,9 @@ import com.wifi.security.dto.request.DetectionRequest;
 import com.wifi.security.dto.response.DetectionResponse;
 import com.wifi.security.dto.response.AnalyzerScore;
 import com.wifi.security.exception.DetectionServiceException;
+import com.wifi.security.dto.AlertDTO;
+import com.wifi.security.service.AlertService;
+import com.wifi.security.entity.detection.DetectionEvent;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -40,6 +43,8 @@ public class Layer1Service {
     private final SessionStateChecker sessionStateChecker;
     private final MeterRegistry meterRegistry;
     private final com.wifi.security.repository.DetectionEventRepository eventRepository;
+    private final com.wifi.security.repository.WiFiNetworkRepository wifiNetworkRepository;
+    private final AlertService alertService;
 
     // Executor for async analyzer execution
     private final ExecutorService analyzerExecutor;
@@ -72,13 +77,17 @@ public class Layer1Service {
             TimeAnomalyDetector timeAnomalyDetector,
             SessionStateChecker sessionStateChecker,
             MeterRegistry meterRegistry,
-            com.wifi.security.repository.DetectionEventRepository eventRepository) {
+            com.wifi.security.repository.DetectionEventRepository eventRepository,
+            AlertService alertService,
+            com.wifi.security.repository.WiFiNetworkRepository wifiNetworkRepository) {
         this.rateAnalyzer = rateAnalyzer;
         this.sequenceValidator = sequenceValidator;
         this.timeAnomalyDetector = timeAnomalyDetector;
         this.sessionStateChecker = sessionStateChecker;
         this.meterRegistry = meterRegistry;
         this.eventRepository = eventRepository;
+        this.alertService = alertService;
+        this.wifiNetworkRepository = wifiNetworkRepository;
 
         // Create a dedicated thread pool for analyzers
         // Using fixed pool to control parallelism
@@ -172,6 +181,9 @@ public class Layer1Service {
                     .requestId(request.getRequestId())
                     .sourceMac(request.getSourceMac())
                     .bssid(request.getBssid())
+                    .destMac(request.getDestMac())
+                    .realAttackerMac(request.getRealAttackerMac())
+                    .isSpoofed(request.getIsSpoofed())
                     .combinedScore(combinedScore)
                     .threatLevel(threatLevel)
                     .isAttackDetected(combinedScore >= attackThreshold)
@@ -189,7 +201,7 @@ public class Layer1Service {
             // Record metrics
             detectionTimer.record(getElapsedMs(startTime), TimeUnit.MILLISECONDS);
 
-            log.info("Layer 1 analysis complete [Source: {}, Score: {}, Threat: {}, Time: {}ms]",
+            log.info("Layer 1 analysis complete [Source: {}, Score: {}, Threat: {}ms]",
                     request.getSourceMac(), combinedScore, threatLevel, response.getProcessingTimeMs());
 
             // NEW: Save all anomaly events to database permanently
@@ -326,6 +338,8 @@ public class Layer1Service {
                         .frameType(p.getFrameType())
                         .rssi(p.getRssi())
                         .timestamp(p.getTimestamp())
+                        .realAttackerMac(p.getRealAttackerMac())
+                        .isSpoofed(p.getIsSpoofed())
                         .build())
                 .toArray(DetectionRequest[]::new);
 
@@ -336,26 +350,137 @@ public class Layer1Service {
         });
     }
 
-    private void saveAnomaly(DetectionResponse response) {
-        try {
-            com.wifi.security.entity.detection.DetectionEvent event = com.wifi.security.entity.detection.DetectionEvent
-                    .builder()
-                    .attackerMac(response.getSourceMac())
-                    .targetMac(response.getSourceMac()) // Use source MAC as target for deauth attacks
-                    .targetBssid(response.getBssid())
-                    .layer1Score(response.getCombinedScore())
-                    .totalScore(response.getCombinedScore())
-                    .severity(com.wifi.security.entity.detection.DetectionEvent.Severity
-                            .valueOf(response.getThreatLevel()))
-                    .detectedAt(response.getAnalysisTimestamp())
-                    .attackStart(response.getAnalysisTimestamp())
-                    .frameCount(1) // Single frame event
-                    .attackDurationMs(1000) // 1 second default
-                    .build();
+    private synchronized void saveAnomaly(DetectionResponse response) {
+        // Save ALL events so that:
+        // 1) updateWithMlScores can find them by ID and upgrade severity after ML runs
+        // 2) Per-analyzer sub-scores are preserved for the frontend Heuristics
+        // Breakdown
 
-            eventRepository.save(event);
-            log.info("Saved detection event: source={}, score={}, severity={}",
-                    response.getSourceMac(), response.getCombinedScore(), response.getThreatLevel());
+        try {
+            // Find appropriate institute context based on target AP (BSSID)
+            String instituteId = null;
+            if (response.getBssid() != null && !response.getBssid().isEmpty()) {
+                instituteId = wifiNetworkRepository.findFirstByBssid(response.getBssid())
+                        .map(n -> n.getInstitute() != null ? n.getInstitute().getInstituteId() : null)
+                        .orElse(null);
+            }
+
+            // Fix: Check for existing event to prevent Event Inflation
+            java.util.List<com.wifi.security.entity.detection.DetectionEvent> recent = eventRepository
+                    .findTop100ByOrderByDetectedAtDesc();
+            java.time.LocalDateTime cutoff = java.time.LocalDateTime.now().minusSeconds(15);
+            com.wifi.security.entity.detection.DetectionEvent existingEvent = recent.stream()
+                    .filter(e -> response.getSourceMac().equals(e.getAttackerMac()))
+                    .filter(e -> e.getDetectedAt() != null && e.getDetectedAt().isAfter(cutoff))
+                    .findFirst()
+                    .orElse(null);
+
+            com.wifi.security.entity.detection.DetectionEvent savedEvent;
+
+            if (existingEvent != null) {
+                // Update existing event instead of creating a new row
+                existingEvent
+                        .setFrameCount((existingEvent.getFrameCount() != null ? existingEvent.getFrameCount() : 1) + 1);
+
+                long duration = java.time.Duration.between(existingEvent.getDetectedAt(), java.time.LocalDateTime.now())
+                        .toMillis();
+                existingEvent.setAttackDurationMs((int) Math.max(1000, duration));
+
+                // Keep the max score
+                if (response.getCombinedScore() > existingEvent.getLayer1Score()) {
+                    existingEvent.setLayer1Score(response.getCombinedScore());
+                    existingEvent.setTotalScore(response.getCombinedScore());
+                    existingEvent.setSeverity(com.wifi.security.entity.detection.DetectionEvent.Severity
+                            .valueOf(response.getThreatLevel()));
+                }
+
+                savedEvent = eventRepository.save(existingEvent);
+            } else {
+                com.wifi.security.entity.detection.DetectionEvent event = com.wifi.security.entity.detection.DetectionEvent
+                        .builder()
+                        .attackerMac(response.getSourceMac())
+                        .targetMac(response.getDestMac() != null ? response.getDestMac() : response.getSourceMac()) // Use
+                                                                                                                    // destination
+                                                                                                                    // MAC
+                                                                                                                    // as
+                                                                                                                    // victim,
+                                                                                                                    // fallback
+                                                                                                                    // to
+                                                                                                                    // source
+                        .realAttackerMac(response.getRealAttackerMac())
+                        .isSpoofed(response.getIsSpoofed())
+                        .targetBssid(response.getBssid())
+                        .instituteId(instituteId) // Ensure multi-tenant dashboards work
+                        .layer1Score(response.getCombinedScore())
+                        .totalScore(response.getCombinedScore())
+                        .rateAnalyzerScore(
+                                response.getAnalyzerScores() != null
+                                        ? response.getAnalyzerScores().getRateAnalyzerScore()
+                                        : 0)
+                        .seqValidatorScore(response.getAnalyzerScores() != null
+                                ? response.getAnalyzerScores().getSequenceValidatorScore()
+                                : 0)
+                        .timeAnomalyScore(
+                                response.getAnalyzerScores() != null
+                                        ? response.getAnalyzerScores().getTimeAnomalyScore()
+                                        : 0)
+                        .sessionStateScore(
+                                response.getAnalyzerScores() != null
+                                        ? response.getAnalyzerScores().getSessionStateScore()
+                                        : 0)
+                        .severity(com.wifi.security.entity.detection.DetectionEvent.Severity
+                                .valueOf(response.getThreatLevel()))
+                        .detectedAt(response.getAnalysisTimestamp())
+                        .attackStart(response.getAnalysisTimestamp())
+                        .frameCount(1) // Single frame event
+                        .attackDurationMs(1000) // 1 second default
+                        .build();
+
+                savedEvent = eventRepository.save(event);
+            }
+
+            // Store the DB-assigned event ID back into the response so DetectionService
+            // can pass it to updateWithMlScores() for a precise update (no race condition)
+            response.setLastSavedEventId(savedEvent.getEventId());
+
+            // Only broadcast to frontend if severity is MEDIUM or higher.
+            // LOW events are NOT broadcast here — DetectionService.triggerAttack()
+            // will broadcast with the correct final score after ML runs.
+            // This prevents 3x duplicate events in the frontend feed.
+            if (savedEvent.getSeverity() != com.wifi.security.entity.detection.DetectionEvent.Severity.LOW) {
+                AlertDTO alert = AlertDTO.builder()
+                        .type(savedEvent
+                                .getSeverity() == com.wifi.security.entity.detection.DetectionEvent.Severity.CRITICAL
+                                || savedEvent
+                                        .getSeverity() == com.wifi.security.entity.detection.DetectionEvent.Severity.HIGH
+                                                ? "CRITICAL_ALERT"
+                                                : "MONITOR_ALERT")
+                        .severity(savedEvent.getSeverity().name())
+                        .attackerMac(savedEvent.getAttackerMac())
+                        .targetBssid(savedEvent.getTargetBssid())
+                        .targetMac(savedEvent.getTargetMac())
+                        .message("Layer 1 analysis: " + savedEvent.getSeverity().name() + " threat detected from "
+                                + savedEvent.getAttackerMac())
+                        .score(savedEvent.getTotalScore() != null ? savedEvent.getTotalScore()
+                                : savedEvent.getLayer1Score())
+                        .layer2Score(savedEvent.getLayer2Score())
+                        .layer3Score(savedEvent.getLayer3Score())
+                        .mlConfidence(savedEvent.getMlConfidence())
+                        .mlPrediction(savedEvent.getMlPrediction())
+                        .isSpoofed(savedEvent.getIsSpoofed())
+                        .attackerConfidence(savedEvent.getAttackerConfidence())
+                        .detectionMethod(savedEvent.getDetectionMethod())
+                        .rssiDeviation(savedEvent.getRssiDeviation())
+                        .realAttackerMac(savedEvent.getRealAttackerMac())
+                        .packetCount(savedEvent.getFrameCount() != null ? savedEvent.getFrameCount() : 1)
+                        .timestamp(java.time.Instant.now().toString())
+                        .build();
+                alertService.processAlert(alert);
+            }
+
+            log.info("Saved detection event: source={}, score={}, severity={}, eventId={}",
+                    response.getSourceMac(), response.getCombinedScore(), response.getThreatLevel(),
+                    savedEvent.getEventId());
         } catch (Exception e) {
             log.error("Failed to save detection event", e);
         }
@@ -380,11 +505,78 @@ public class Layer1Service {
 
         boolean underAttack = recent.stream()
                 .anyMatch(e -> e.getSeverity().name().equals("CRITICAL") ||
-                        e.getSeverity().name().equals("HIGH"));
+                        e.getSeverity().name().equals("HIGH") ||
+                        e.getSeverity().name().equals("MEDIUM"));
 
         log.debug("Attack status check: {} critical/high events in last 15 seconds = {}",
                 recent.size(), underAttack);
         return underAttack;
+    }
+
+    /**
+     * Update the most recent detection event for a source MAC with ML analysis
+     * results.
+     * Called by DetectionService after Layer 2 ML runs.
+     * Prefers eventId (fast, precise) and falls back to MAC-based lookup if eventId
+     * is null.
+     */
+    public void updateWithMlScores(Long eventId, String sourceMac, int mlScore, double mlConfidence,
+            String mlPrediction, String modelAgreement, Integer layer3Score, String layer3Notes, int finalScore) {
+        log.info("updateWithMlScores called for eventId={}, sourceMac={}, mlScore={}, confidence={}",
+                eventId, sourceMac, mlScore, mlConfidence);
+        try {
+            // Prefer eventId lookup — eliminates race condition when multiple events for
+            // the same MAC are saved within the same millisecond.
+            if (eventId != null) {
+                eventRepository.findById(eventId).ifPresent(event -> applyMlScores(
+                        event, mlScore, mlConfidence, mlPrediction, modelAgreement,
+                        layer3Score, layer3Notes, finalScore));
+                return;
+            }
+
+            // Fallback: MAC-based lookup (used when event was LOW and not persisted)
+            java.util.List<com.wifi.security.entity.detection.DetectionEvent> recent = eventRepository
+                    .findTop100ByOrderByDetectedAtDesc();
+
+            recent.stream()
+                    .filter(e -> sourceMac.equals(e.getAttackerMac()))
+                    .findFirst()
+                    .ifPresent(event -> applyMlScores(
+                            event, mlScore, mlConfidence, mlPrediction, modelAgreement,
+                            layer3Score, layer3Notes, finalScore));
+        } catch (Exception e) {
+            log.error("Failed to update event with ML scores for {}: {}", sourceMac, e.getMessage());
+        }
+    }
+
+    private void applyMlScores(com.wifi.security.entity.detection.DetectionEvent event,
+            int mlScore, double mlConfidence, String mlPrediction, String modelAgreement,
+            Integer layer3Score, String layer3Notes, int finalScore) {
+        event.setLayer2Score(mlScore);
+        event.setMlConfidence(mlConfidence);
+        event.setMlPrediction(mlPrediction);
+        event.setModelAgreement(modelAgreement);
+        if (layer3Score != null) {
+            event.setLayer3Score(layer3Score);
+        }
+        if (layer3Notes != null) {
+            event.setLayer3Notes(layer3Notes);
+        }
+        event.setTotalScore(finalScore);
+        // Re-evaluate severity based on final score
+        if (finalScore >= attackThreshold) {
+            event.setSeverity(com.wifi.security.entity.detection.DetectionEvent.Severity.CRITICAL);
+        } else if (finalScore >= suspiciousThreshold) {
+            event.setSeverity(com.wifi.security.entity.detection.DetectionEvent.Severity.HIGH);
+        } else if (finalScore >= warningThreshold) {
+            event.setSeverity(com.wifi.security.entity.detection.DetectionEvent.Severity.MEDIUM);
+        }
+        eventRepository.save(event);
+        log.info("Updated event (id={}) with ML: ml={}, conf={}, final={}, severity={}",
+                event.getEventId(), mlScore, mlConfidence, finalScore, event.getSeverity());
+        // NOTE: No SSE re-broadcast here — DetectionService.triggerAttack()
+        // already broadcasts the final score. Double-broadcasting caused
+        // the frontend to show 3x the actual number of events.
     }
 
     /**

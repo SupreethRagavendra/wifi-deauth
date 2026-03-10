@@ -36,6 +36,21 @@ public class DetectionResponse {
     private String bssid;
 
     /**
+     * Destination MAC address of the frame.
+     */
+    private String destMac;
+
+    /**
+     * The real attacker MAC address if spoofed.
+     */
+    private String realAttackerMac;
+
+    /**
+     * Whether the frame is spoofed.
+     */
+    private Boolean isSpoofed;
+
+    /**
      * Combined weighted score from all analyzers (0-100).
      */
     private int combinedScore;
@@ -88,6 +103,16 @@ public class DetectionResponse {
     private Integer xgbVote;
     private Double mlConfidence;
     private Integer layer2Score;
+
+    // Layer 3 Fields
+    private Integer layer3Score;
+    private String layer3Notes;
+
+    /**
+     * ID of the detection event saved to DB by Layer 1, used by Layer 2/3 to update
+     * the exact row instead of doing a potentially-racy MAC-based lookup.
+     */
+    private Long lastSavedEventId;
 
     /**
      * Sets recommended action based on threat level.

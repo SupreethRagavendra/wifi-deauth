@@ -18,6 +18,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<boolean>;
     logout: () => void;
     setUser: (user: User) => void;
+    updateProfile: (updatedData: Partial<User>) => void;
     clearError: () => void;
 }
 
@@ -70,6 +71,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUserState(newUser);
     }, []);
 
+    const updateProfile = useCallback((updatedData: Partial<User>) => {
+        setUserState((prevUser) => {
+            if (!prevUser) return null;
+            const newUser = { ...prevUser, ...updatedData };
+            setStoredUser(newUser);
+            return newUser;
+        });
+    }, []);
+
     const clearError = useCallback(() => {
         setError(null);
     }, []);
@@ -84,9 +94,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             login,
             logout,
             setUser,
+            updateProfile,
             clearError,
         }),
-        [user, isLoading, error, login, logout, setUser, clearError]
+        [user, isLoading, error, login, logout, setUser, updateProfile, clearError]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

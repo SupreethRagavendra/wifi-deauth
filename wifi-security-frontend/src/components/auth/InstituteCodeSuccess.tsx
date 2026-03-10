@@ -75,14 +75,14 @@ export const InstituteCodeSuccess: React.FC<InstituteCodeSuccessProps> = ({
 
                     {/* Title */}
                     <Dialog.Title className="text-center">
-                        <h2 className="text-h2 text-text-primary">
+                        <h2 className="text-h2 text-gray-900">
                             Institute Created Successfully!
                         </h2>
                     </Dialog.Title>
 
                     {/* Description */}
-                    <Dialog.Description className="mt-2 text-center text-body text-text-secondary">
-                        Your institute <strong className="text-text-primary">{instituteName}</strong> has been registered.
+                    <Dialog.Description className="mt-2 text-center text-body text-gray-600">
+                        Your institute <strong className="text-gray-900 font-bold">{instituteName}</strong> has been registered.
                     </Dialog.Description>
 
                     {/* Institute Code Card */}

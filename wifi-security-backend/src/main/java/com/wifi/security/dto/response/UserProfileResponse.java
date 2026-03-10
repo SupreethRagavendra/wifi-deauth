@@ -23,5 +23,10 @@ public class UserProfileResponse {
     private String instituteName;
     private String instituteCode;
     private String instituteType;
+    private String macAddress;
+    private String wifiAdapter;
+    private String phoneNumber;
+    private Boolean alertsEmail;
+    private Boolean alertsSms;
     private LocalDateTime createdAt;
 }

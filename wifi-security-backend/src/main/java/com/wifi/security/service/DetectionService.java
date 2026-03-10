@@ -2,6 +2,7 @@ package com.wifi.security.service;
 
 import com.wifi.security.dto.DeauthPacketDTO;
 import com.wifi.security.dto.AlertDTO;
+import com.wifi.security.dto.response.Layer2Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Collectors;
+import com.wifi.security.dto.AttackAlertData;
 
 @Service
 public class DetectionService {
@@ -38,7 +40,7 @@ public class DetectionService {
     // Configuration
     // Layer 1 Service handles its own thresholds
 
-    private static final long ATTACK_COOLDOWN_MS = 30000; // Attack flag stays for 30s after last packet
+    private static final long ATTACK_COOLDOWN_MS = 8000; // Flip back to SAFE 8s after last attack packet
 
     // State
     private final AtomicLong totalThreatsDetected = new AtomicLong(0);
@@ -61,10 +63,50 @@ public class DetectionService {
     private com.wifi.security.service.layer2.Layer2Service layer2Service;
 
     @Autowired
+    private com.wifi.security.service.layer3.Layer3Service layer3Service;
+
+    @Autowired
     private AlertService alertService;
 
     @Autowired
     private com.wifi.security.repository.PacketRepository packetRepository;
+
+    @Autowired
+    private AlertNotificationService alertNotificationService;
+
+    // ── In-memory burst detector ─────────────────────────────────────────────
+    // Tracks deauth timestamps per source MAC to detect rapid bursts
+    // that the DB-backed RateAnalyzer misses (batch timing issue)
+    private final ConcurrentHashMap<String, List<Long>> burstTimestamps = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> lastNotificationTime = new ConcurrentHashMap<>();
+    private static final long NOTIFICATION_COOLDOWN_MS = 120_000; // 2 minutes per MAC
+
+    /**
+     * Check burst: count deauth packets from this source in the last 2 seconds.
+     * Returns a bonus score (0-50) to add to the L1 combined score.
+     */
+    private int checkBurst(String sourceMac) {
+        long now = System.currentTimeMillis();
+        long cutoff = now - 2000; // 2 second window
+
+        List<Long> timestamps = burstTimestamps.computeIfAbsent(sourceMac,
+                k -> Collections.synchronizedList(new ArrayList<>()));
+        timestamps.add(now);
+
+        // Prune old entries
+        synchronized (timestamps) {
+            timestamps.removeIf(t -> t < cutoff);
+        }
+
+        int count = timestamps.size();
+        if (count >= 10)
+            return 50; // Heavy burst
+        if (count >= 5)
+            return 40; // Definite burst
+        if (count >= 3)
+            return 25; // Moderate burst
+        return 0;
+    }
 
     public void processPacket(DeauthPacketDTO packet) {
         processBatch(Collections.singletonList(packet));
@@ -102,7 +144,18 @@ public class DetectionService {
                         entity.setSequenceNumber(packet.getSeq());
                         entity.setRssi(packet.getSignal() != null ? packet.getSignal() : -100);
                         entity.setFrameType("DEAUTH");
-                        entity.setTimestamp(java.time.LocalDateTime.now());
+                        // Use actual capture timestamp from sniffer, not processing time
+                        java.time.LocalDateTime capturedAt;
+                        try {
+                            String ts = packet.getTimestamp();
+                            capturedAt = (ts != null && !ts.isEmpty())
+                                    ? java.time.LocalDateTime.parse(ts,
+                                            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"))
+                                    : java.time.LocalDateTime.now();
+                        } catch (Exception ex) {
+                            capturedAt = java.time.LocalDateTime.now();
+                        }
+                        entity.setTimestamp(capturedAt);
                         return entity;
                     })
                     .collect(Collectors.toList());
@@ -150,9 +203,12 @@ public class DetectionService {
                 .builder()
                 .requestId(java.util.UUID.randomUUID().toString())
                 .sourceMac(packet.getSrc())
+                .destMac(packet.getDst())
                 .bssid(packet.getBssid())
                 .frameType("DEAUTH")
                 .rssi(signalStrength)
+                .isSpoofed(packet.getIsSpoofed())
+                .realAttackerMac(packet.getRealAttackerMac())
                 .timestamp(java.time.LocalDateTime.now())
                 .build();
 
@@ -160,51 +216,171 @@ public class DetectionService {
             // Layer 1 Analysis (Synchronous)
             com.wifi.security.dto.response.DetectionResponse response = layer1Service.analyze(request);
 
-            // Layer 2 Analysis (ML) - Only if score >= 40 (according to flowchart)
-            if (response.getCombinedScore() >= 40) {
+            // Layer 2 Analysis (ML) - ALWAYS run for deauth frames
+            // Previously required L1 score >= 5, but L1 often returns 0 for first packets
+            // because DB hasn't accumulated enough data. ML must run to get accurate
+            // scores.
+            boolean needsML = "DEAUTH".equalsIgnoreCase(request.getFrameType());
+
+            int mlScore = 0;
+            String mlPrediction = "SKIPPED";
+            double mlConfidence = 0.0;
+            String modelAgreement = "0/4";
+
+            if (needsML) {
                 try {
-                    response = layer2Service.analyzeWithML(request, response);
+                    Layer2Response mlResponse = layer2Service.analyzeWithML(request, response);
+                    if (mlResponse != null) {
+                        mlScore = mlResponse.getMlScore();
+                        mlPrediction = mlResponse.getPrediction();
+                        mlConfidence = mlResponse.getConfidence();
+                        modelAgreement = mlResponse.getModelAgreement();
+                    }
                 } catch (Exception e) {
                     logger.warn("Layer 2 ML ignored due to error: {}", e.getMessage());
                 }
             }
 
-            // Final Decision
-            // If ML says ATTACK (Confidence > 75%), we force trigger
-            // OR if Layer 1 score is Suspicious (>= 40) or Attack (>= 75)
-            boolean mlConfirmsAttack = response.getMlConfidence() != null && response.getMlConfidence() > 75.0;
+            // Update Response Payload
+            response.setLayer2Score(mlScore);
+            response.setMlConfidence(mlConfidence);
 
-            // Allow Suspicious events (>= 40) to trigger the "Under Attack" / "Unsafe"
-            // state for visibility
-            boolean layer1ConfirmsAttack = response.getCombinedScore() >= suspiciousThreshold;
+            int layer3Score = 0;
+            String layer3Notes = null;
+
+            // ALWAYS run Layer 3 analysis for testing
+            try {
+                com.wifi.security.dto.response.Layer3Response l3 = layer3Service.analyze(packet, response, null);
+                layer3Score = l3.getPhysicalScore();
+                layer3Notes = l3.getAnalysisNotes();
+                response.setLayer3Score(layer3Score);
+                response.setLayer3Notes(layer3Notes);
+            } catch (Exception e) {
+                logger.warn("Layer 3 analysis failed: {}", e.getMessage());
+            }
+
+            // Step 4: Calculate final score (L1: 40%, L2: 40%, L3: 20%)
+            // L1 gets more weight because ML may not always be available
+            double normL1 = Math.min(100.0, (response.getCombinedScore() / 95.0) * 100.0);
+            double normL2 = mlScore;
+            double normL3 = Math.min(100.0, (layer3Score / 70.0) * 100.0);
+
+            int finalScore = (int) Math.round((normL1 * 0.40) + (normL2 * 0.40) + (normL3 * 0.20));
+
+            // ── Bonuses (capped at +30 total to prevent all events being CRITICAL) ──
+            int totalBonus = 0;
+
+            // Burst detection: catches rapid deauths that the DB misses
+            int burstBonus = checkBurst(packet.getSrc());
+            if (burstBonus > 0) {
+                totalBonus += burstBonus;
+            }
+
+            // RSSI Score Boost: escalate when RSSI confirms spoofing
+            int rssiBoost = packet.getScoreBoost() != null ? packet.getScoreBoost() : 0;
+            if (rssiBoost > 0) {
+                totalBonus += rssiBoost;
+            }
+
+            // Cap total bonuses to prevent inflation
+            totalBonus = Math.min(totalBonus, 30);
+            if (totalBonus > 0) {
+                int preBonus = finalScore;
+                finalScore = Math.min(100, finalScore + totalBonus);
+                logger.info("⚡ Score bonus: {} + {} = {} (burst={}, rssi={}, source: {})",
+                        preBonus, totalBonus, finalScore, burstBonus, rssiBoost, packet.getSrc());
+            }
+
+            // ── Deauth frame floor (applied AFTER bonuses) ────────────────
+            // Any deauth frame should have a minimum score of 15 (MEDIUM)
+            if ("DEAUTH".equalsIgnoreCase(request.getFrameType())) {
+                finalScore = Math.max(finalScore, 15);
+            }
+
+            // ── Safety floor: use normalized L1 (not raw) ─────────────────
+            // Prevents weighted average from dropping below strong L1 signal
+            double normL1Floor = Math.min(100.0, (response.getCombinedScore() / 95.0) * 100.0);
+            finalScore = Math.max(finalScore, (int) Math.round(normL1Floor));
+
+            // Recompute threat level based on the final weighted score
+            // (the original L1 threat level may be stale after ML & L3 boosting)
+            // Unified threat level thresholds (must match Layer1Service +
+            // application.properties)
+            String updatedThreatLevel;
+            if (finalScore >= 50) {
+                updatedThreatLevel = "CRITICAL";
+            } else if (finalScore >= 30) {
+                updatedThreatLevel = "HIGH";
+            } else if (finalScore >= 15) {
+                updatedThreatLevel = "MEDIUM";
+            } else {
+                updatedThreatLevel = "LOW";
+            }
+            response.setThreatLevel(updatedThreatLevel);
+
+            // ALWAYS update the saved detection event with the final weighted score,
+            // ML results, and L3 analysis — even if ML was skipped (mlScore=0).
+            // This ensures the DB event has the correct totalScore with burst bonus,
+            // deauth floor, and RSSI boost applied.
+            layer1Service.updateWithMlScores(
+                    response.getLastSavedEventId(),
+                    packet.getSrc(), mlScore, mlConfidence, mlPrediction, modelAgreement, layer3Score, layer3Notes,
+                    finalScore);
+
+            // mlConfidence > 0.60 OR L1 combined score >= 20 triggers attack state
+            boolean mlConfirmsAttack = mlConfidence > 0.60;
+
+            // Lower threshold so early-burst packets (before DB window fills)
+            // still register as attacks rather than appearing NORMAL
+            boolean layer1ConfirmsAttack = response.getCombinedScore() >= 20;
 
             if (mlConfirmsAttack || layer1ConfirmsAttack) {
-                triggerAttack(packet, response);
-            } else {
-                broadcastMinorEvent(packet, response);
+                // Ensure trigger uses the newly weighted final score for visibility
+                response.setCombinedScore(finalScore);
+                triggerAttack(packet, response, mlPrediction, modelAgreement);
+            } else if (finalScore >= 10) {
+                // Minor events: only update status, do NOT fire SSE alert events
+                // Firing alerts for LOW events inflates the frontend threat counter
+                response.setCombinedScore(finalScore);
+                try {
+                    alertService.broadcastStatus(getCurrentStatus());
+                } catch (Exception e) {
+                    logger.error("Failed to broadcast status for minor event: {}", e.getMessage());
+                }
             }
+            // score < 10: silently ignored — not an attack, not worth showing
         } catch (Exception e) {
             logger.error("Error during Analysis: {}", e.getMessage());
         }
     }
 
-    private void triggerAttack(DeauthPacketDTO packet, com.wifi.security.dto.response.DetectionResponse response) {
+    private void triggerAttack(DeauthPacketDTO packet, com.wifi.security.dto.response.DetectionResponse response,
+            String mlPrediction, String modelAgreement) {
         long now = System.currentTimeMillis();
         lastAttackTime.set(now);
         boolean wasAlreadyAttacking = underAttack.getAndSet(true);
-        totalThreatsDetected.incrementAndGet();
+
+        // Prevent event count inflation by only incrementing when a NEW attack starts
+        if (!wasAlreadyAttacking) {
+            totalThreatsDetected.incrementAndGet();
+        }
 
         Map<String, Object> details = new HashMap<>();
         details.put("attackerMac", packet.getSrc());
         details.put("targetBssid", packet.getBssid());
-        details.put("packetCount", response.getAnalyzerScores().getRateAnalyzerScore());
+        details.put("packetCount",
+                response.getAnalyzerScores() != null ? response.getAnalyzerScores().getRateAnalyzerScore() : 0);
         details.put("signal", packet.getSignal());
         details.put("channel", packet.getChannel());
         details.put("reason", packet.getReason());
         details.put("detectedAt", Instant.now().toString());
         details.put("score", response.getCombinedScore());
         details.put("mlConfidence", response.getMlConfidence());
+        details.put("mlPrediction", mlPrediction);
+        details.put("modelAgreement", modelAgreement);
         details.put("layer2Score", response.getLayer2Score());
+        details.put("layer3Score", response.getLayer3Score());
+        details.put("layer3Notes", response.getLayer3Notes());
         details.put("threatLevel", response.getThreatLevel());
         details.put("analyzers", response.getAnalyzerScores());
 
@@ -222,24 +398,136 @@ public class DetectionService {
             AlertDTO alert = new AlertDTO();
             alert.setType("DEAUTH_FLOOD");
             alert.setSeverity(response.getThreatLevel());
-            alert.setMessage(String.format("Attack detected (Score: %d) - Spoofed Source: %s, Network BSSID: %s",
-                    response.getCombinedScore(), packet.getSrc(), packet.getBssid()));
+            alert.setMessage(String.format(
+                    "Attack detected (Score: %d) - Spoofed Source: %s, Network BSSID: %s, Target Client: %s",
+                    response.getCombinedScore(), packet.getSrc(), packet.getBssid(), packet.getDst()));
             alert.setAttackerMac(packet.getSrc());
             alert.setTargetBssid(packet.getBssid());
-            alert.setPacketCount(response.getCombinedScore());
+            alert.setTargetMac(packet.getDst());
+            alert.setPacketCount(
+                    response.getAnalyzerScores() != null
+                            ? response.getAnalyzerScores().getRateAnalyzerScore()
+                            : 0);
+            alert.setScore(response.getCombinedScore());
             alert.setSignal(packet.getSignal());
             alert.setChannel(packet.getChannel());
             alert.setTimestamp(Instant.now().toString());
+            alert.setLayer2Score(response.getLayer2Score() != null ? response.getLayer2Score() : 0);
+            alert.setLayer3Score(response.getLayer3Score() != null ? response.getLayer3Score() : 0);
+            alert.setMlConfidence(response.getMlConfidence());
+            alert.setMlPrediction(mlPrediction);
+            alert.setModelAgreement(modelAgreement);
 
             alertService.processAlert(alert);
             alertService.broadcastStatus(getCurrentStatus());
+
+            // ── Send Email/SMS Notifications ────────────────────────────────
+            // Only for HIGH/CRITICAL, with rate limiting per source MAC
+            if ("CRITICAL".equals(response.getThreatLevel()) || "HIGH".equals(response.getThreatLevel())) {
+                try {
+                    String srcKey = packet.getSrc() != null ? packet.getSrc() : "unknown";
+                    long now2 = System.currentTimeMillis();
+                    Long lastSent = lastNotificationTime.get(srcKey);
+                    if (lastSent == null || (now2 - lastSent) > NOTIFICATION_COOLDOWN_MS) {
+                        lastNotificationTime.put(srcKey, now2);
+                        AttackAlertData alertData = AttackAlertData.builder()
+                                .attackerMac(packet.getSrc() != null ? packet.getSrc() : "UNKNOWN")
+                                .victimMac(packet.getDst() != null ? packet.getDst() : "UNKNOWN")
+                                .confidence(response.getMlConfidence() != null
+                                        ? response.getMlConfidence() * 100
+                                        : (double) response.getCombinedScore())
+                                .ssid(packet.getBssid() != null ? packet.getBssid() : "N/A")
+                                .timestamp(Instant.now().toString())
+                                .defenseLevel(response.getThreatLevel())
+                                .channel(packet.getChannel() > 0 ? String.valueOf(packet.getChannel()) : "N/A")
+                                .status("detected")
+                                .build();
+                        alertNotificationService.notifyAttack(alertData.getSsid(), alertData);
+                        logger.info("📧 Email/SMS notification sent for attack from {}", srcKey);
+                    } else {
+                        logger.debug("⏱ Notification rate-limited for {} ({}s remaining)",
+                                srcKey, (NOTIFICATION_COOLDOWN_MS - (now2 - lastSent)) / 1000);
+                    }
+                } catch (Exception notifEx) {
+                    logger.error("Failed to send email/SMS notification: {}", notifEx.getMessage());
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════════
+            // ATTACK-FOCUSED DEFENSE — Detect the ATTACK, not the ATTACKER
+            // ═══════════════════════════════════════════════════════════════════
+            // The attacker can change MAC in 1 second. We focus on:
+            // - RSSI deviation (physics can't be spoofed)
+            // - Deauth rate (attack patterns)
+            // - ML confidence (behavioral analysis)
+            // Defense actions (PMF, channel hop) are handled by prevention engine.
+            // ═══════════════════════════════════════════════════════════════════
+            int score = response.getCombinedScore();
+            String srcMac = packet.getSrc();
+            String dstMac = packet.getDst();
+            String bssid = packet.getBssid();
+
+            // Attack detection fields
+            String detMethod = packet.getDetectionMethod() != null ? packet.getDetectionMethod() : "NONE";
+            boolean isSpoofed = Boolean.TRUE.equals(packet.getIsSpoofed());
+            Double rssiDev = packet.getRssiDeviation();
+            int attackConf = packet.getAttackerConfidence() != null ? packet.getAttackerConfidence() : 0;
+
+            // Correctly assign attacker and victim logic
+            String victimClient;
+            String trueAttackerMac;
+
+            if (isSpoofed && packet.getRealAttackerMac() != null
+                    && !packet.getRealAttackerMac().equals("00:00:00:00:00:00")) {
+                trueAttackerMac = packet.getRealAttackerMac();
+                victimClient = srcMac; // Since srcMac was spoofed to be the victim
+            } else {
+                trueAttackerMac = srcMac;
+
+                // Identify the victim client being disconnected
+                if (srcMac != null && bssid != null && srcMac.equalsIgnoreCase(bssid)) {
+                    victimClient = dstMac; // AP->Client: dst is victim
+                } else {
+                    victimClient = dstMac; // Normal assumption if not AP->Client and not known spoof
+                }
+            }
+
+            if (score >= 85) {
+                // ── LEVEL 3 : CRITICAL — Definite attack (LOG ONLY — SSE handled by
+                // triggerAttack)
+                logger.error("🚨 LEVEL 3 ATTACK CONFIRMED: score={} method={} victim={} BSSID={}",
+                        score, detMethod, victimClient, bssid);
+            } else if (score >= 60) {
+                // ── LEVEL 2 : HIGH — Confirmed attack (LOG ONLY)
+                logger.warn("🛡️ LEVEL 2 ATTACK: score={} method={} victim={}",
+                        score, detMethod, victimClient);
+            } else if (score >= 40) {
+                // ── LEVEL 1 : MEDIUM — Suspicious (LOG ONLY)
+                logger.info("🔍 Suspicious deauth: score={} on {} — {}",
+                        score, bssid, detMethod);
+            }
+            // score < 40 → silent
         } catch (Exception e) {
             logger.error("Failed to process alert: {}", e.getMessage());
         }
     }
 
+    /** Attempt to enable 802.11w PMF — the only real deauth prevention. */
+    private void tryEnablePMF(String bssid) {
+        logger.warn("🔒 AUTO-PMF: Requesting 802.11w PMF activation on BSSID {}", bssid);
+        AlertDTO pmfAlert = new AlertDTO();
+        pmfAlert.setType("PMF_ENABLE");
+        pmfAlert.setSeverity("HIGH");
+        pmfAlert.setAttackerMac("system");
+        pmfAlert.setTargetBssid(bssid);
+        pmfAlert.setTimestamp(Instant.now().toString());
+        pmfAlert.setMessage(String.format(
+                "� Requesting 802.11w PMF on %s to block spoofed deauths", bssid));
+        alertService.processAlert(pmfAlert);
+    }
+
     private void broadcastMinorEvent(DeauthPacketDTO packet,
-            com.wifi.security.dto.response.DetectionResponse response) {
+            com.wifi.security.dto.response.DetectionResponse response, String mlPrediction, String modelAgreement) {
         try {
             AlertDTO alert = new AlertDTO();
             alert.setType("DEAUTH_PACKET");
@@ -248,10 +536,20 @@ public class DetectionService {
                     response.getCombinedScore(), packet.getSrc(), packet.getBssid()));
             alert.setAttackerMac(packet.getSrc());
             alert.setTargetBssid(packet.getBssid());
-            alert.setPacketCount(response.getCombinedScore());
+            alert.setTargetMac(packet.getDst());
+            alert.setPacketCount(
+                    response.getAnalyzerScores() != null
+                            ? response.getAnalyzerScores().getRateAnalyzerScore()
+                            : 0);
+            alert.setScore(response.getCombinedScore());
             alert.setSignal(packet.getSignal());
             alert.setChannel(packet.getChannel());
             alert.setTimestamp(Instant.now().toString());
+            alert.setLayer2Score(response.getLayer2Score() != null ? response.getLayer2Score() : 0);
+            alert.setLayer3Score(response.getLayer3Score() != null ? response.getLayer3Score() : 0);
+            alert.setMlConfidence(response.getMlConfidence());
+            alert.setMlPrediction(mlPrediction);
+            alert.setModelAgreement(modelAgreement);
 
             alertService.processAlert(alert);
         } catch (Exception e) {
@@ -304,7 +602,6 @@ public class DetectionService {
         java.util.List<com.wifi.security.entity.detection.DetectionEvent> recentEvents = layer1Service
                 .getRecentEvents(); // This already gets last 60 seconds
 
-        // Filter events within the specified window
         long windowStart = System.currentTimeMillis() - (windowSeconds * 1000);
         java.util.List<com.wifi.security.entity.detection.DetectionEvent> windowedEvents = recentEvents.stream()
                 .filter(e -> e.getDetectedAt().atZone(java.time.ZoneId.systemDefault()).toInstant()

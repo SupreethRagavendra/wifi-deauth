@@ -136,6 +136,8 @@ public class AuthService {
                                 .name(request.getName().trim())
                                 .email(request.getEmail().trim().toLowerCase())
                                 .passwordHash(passwordEncoder.encode(request.getPassword()))
+                                .macAddress(request.getMacAddress() != null ? request.getMacAddress().toUpperCase()
+                                                : null)
                                 .role(UserRole.VIEWER)
                                 .build();
 

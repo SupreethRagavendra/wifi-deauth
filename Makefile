@@ -1,4 +1,4 @@
-.PHONY: help setup install install-frontend install-backend run-backend run-frontend build build-backend build-frontend clean
+.PHONY: help setup install install-frontend install-backend run-backend run-frontend run-prevention build build-backend build-frontend clean
 
 # Variables
 BACKEND_DIR := wifi-security-backend
@@ -7,29 +7,37 @@ ML_DIR = ml-api
 PYTHON = venv/bin/python
 
 # Default target
-all: buildan1
+all: build
 
 # Default target
 help:
 	@echo "================================================================="
 	@echo "             Wi-Fi Security Platform - Run Commands"
 	@echo "================================================================="
-	@echo "Run these in 3 separate terminals:"
+	@echo "Run these in separate terminals:"
 	@echo ""
 	@echo "  1. make run-backend      : Start the Spring Boot Backend"
 	@echo "  2. make run-frontend     : Start the React Dashboard"
 	@echo "  3. make run-sniffer      : Start the Packet Capture Engine"
+	@echo "  4. make run-ml           : Start the Python ML Service"
+	@echo "  5. make run-prevention   : Start Level 1 Prevention Engine (port 5002)"
 	@echo ""
 	@echo "Testing:"
 	@echo "  make real-attack         : Test Attack (AP=... CLIENT=... CHANNEL=...)"
 	@echo "  make stealth-attack      : Single Deauth Packet (Stealth Mode)"
+	@echo "  make run-attack          : Continuous deauth flood"
 	@echo ""
 	@echo "Setup:"
 	@echo "  make setup               : Install dependencies (Run FIRST)"
+	@echo "  make install-prevention  : Install prevention engine Python deps"
 	@echo "================================================================="
 
 # Installation
-setup: install-backend install-frontend install-python
+setup: install-backend install-frontend install-python install-prevention
+
+install-prevention:
+	@echo "--> Installing Prevention Engine Python dependencies..."
+	@sudo pip3 install -r prevention-engine/requirements.txt --break-system-packages
 
 install-backend:
 	@echo "--> Setting up Backend (Maven)..."
@@ -44,10 +52,30 @@ install-python:
 	@echo "--> Installing Python dependencies (pip3) with sudo..."
 	@sudo pip3 install -r packet-capture/requirements.txt --break-system-packages
 
-# Running - MySQL mode
+# Running
 run-ml:
-	@echo "--> Starting ML API (Flask)..."
-	cd $(ML_DIR) && $(PYTHON) app.py
+	@echo "--> Starting Python ML Service..."
+	bash -c "cd ml-service && source venv/bin/activate && uvicorn ml_service:app --host 0.0.0.0 --port 5000 --reload"
+
+run-prevention:
+	@echo "══════════════════════════════════════════════════"
+	@echo "  🛡  Prevention Engine v3.0"
+	@echo "  ├─ API port:      5002"
+	@echo "  ├─ Thresholds:    L1≥40% L2≥60% L3≥85% L4≥95%"
+	@echo "  ├─ Components:    16 (4 per level)"
+	@echo "  ├─ DB:            Aiven MySQL / wifi_deauth"
+	@echo "  ├─ Honeypot:      150 fake APs (mdk4)"
+	@echo "  └─ Forensics:     PCAP + PDF reports"
+	@echo "══════════════════════════════════════════════════"
+	sudo python3 prevention-engine/level1.py
+
+clean-prevention:
+	@echo "🧹 Cleaning prevention system..."
+	sudo bash scripts/cleanup_prevention.sh
+
+test-prevention:
+	@echo "🧪 Running prevention engine tests..."
+	cd prevention-engine && python3 -m pytest tests/ -v --tb=short
 
 run-backend:
 	@echo "--> Starting Backend (MySQL) - WITH SUDO FOR SCANNING..."
@@ -58,10 +86,41 @@ run-frontend:
 	@echo "--> Starting Frontend..."
 	cd $(FRONTEND_DIR) && npm start
 
+CHANNEL     ?= 0
+
 run-sniffer:
-	@echo "--> Starting Packet Sniffer (Module 2) on $(INTERFACE)..."
-	@echo "    Note: Requires sudo password."
-	@sudo WIFI_INTERFACE=$(INTERFACE) WIFI_CHANNEL=$(CHANNEL) BACKEND_URL=http://localhost:8080 python3 packet-capture/main.py
+	@echo "──────────────────────────────────────────────────"
+	@echo "  Starting Packet Sniffer (Module 2)"
+	@echo "  ├─ Interface:  $(INTERFACE)"
+	@if [ "$(CHANNEL)" = "0" ]; then \
+		echo "  ├─ Channel:    ALL (auto-hop 1-13)"; \
+	else \
+		echo "  ├─ Channel:    $(CHANNEL)"; \
+	fi
+	@echo "  └─ Backend:    http://localhost:8080"
+	@echo "──────────────────────────────────────────────────"
+	sudo WIFI_INTERFACE=$(INTERFACE) WIFI_CHANNEL=$(CHANNEL) BACKEND_URL=http://localhost:8080 python3 packet-capture/main.py
+
+# Explicit all-channel alias (same as make run-sniffer with CHANNEL=0)
+run-sniffer-all:
+	$(MAKE) run-sniffer CHANNEL=0
+
+# ── Attack Test (aireplay-ng on wlan2mon) ────────────────────────────────
+# Default targets: AP  = 9E:A8:2C:C2:1F:D9, Victim = victim phone 94:65:2D:97:25:87
+ATTACK_IFACE ?= wlan2mon
+ATTACK_AP    ?= 9E:A8:2C:C2:1F:D9
+ATTACK_STA   ?= 4C:6F:9C:F4:FA:63
+ATTACK_COUNT ?= 100
+
+run-attack:
+	@echo "══════════════════════════════════════════════════"
+	@echo "  ⚔️  DEAUTH ATTACK — aireplay-ng flood"
+	@echo "  ├─ Interface:  $(ATTACK_IFACE)"
+	@echo "  ├─ Target AP:  $(ATTACK_AP)"
+	@echo "  ├─ Victim STA: $(ATTACK_STA)"
+	@echo "  └─ Count:      $(ATTACK_COUNT) deauths"
+	@echo "══════════════════════════════════════════════════"
+	sudo aireplay-ng --deauth $(ATTACK_COUNT) -a $(ATTACK_AP) -c $(ATTACK_STA) $(ATTACK_IFACE)
 
 attack-test:
 	@echo "--> Simulating Deauth Attack Flood (Secure Simulation)..."
@@ -125,7 +184,6 @@ clean-force:
 	@echo "--> Cleaning Frontend..."
 	rm -rf $(FRONTEND_DIR)/build
 	@echo "--> Done!"
-
 
 # Testing new additions (Layer 1 test & bypass)
 run_attack:

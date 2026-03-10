@@ -32,7 +32,7 @@ class DataSender:
                 # Wait briefly for items
                 try:
                     # Determine block time based on if we have items
-                    item = self.queue.get(timeout=0.1)
+                    item = self.queue.get(timeout=0.02)  # 20ms poll for speed
                     batch.append(item)
                 except queue.Empty:
                     pass

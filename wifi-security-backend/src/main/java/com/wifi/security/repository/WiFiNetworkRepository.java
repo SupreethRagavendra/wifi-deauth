@@ -31,4 +31,15 @@ public interface WiFiNetworkRepository extends JpaRepository<WiFiNetwork, String
      * Check if a BSSID already exists for an institute.
      */
     boolean existsByBssidAndInstitute(String bssid, Institute institute);
+
+    /**
+     * Check if ANY registered network has this BSSID — used by prevention to
+     * whitelist our own APs (attackers spoof AP MACs in deauth frames).
+     */
+    boolean existsByBssid(String bssid);
+
+    /**
+     * Find the first network matching the given BSSID to extract institute context.
+     */
+    java.util.Optional<WiFiNetwork> findFirstByBssid(String bssid);
 }

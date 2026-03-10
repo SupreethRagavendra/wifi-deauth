@@ -3,6 +3,7 @@ package com.wifi.security.service.layer1;
 import com.wifi.security.dto.request.DetectionRequest;
 import com.wifi.security.dto.response.DetectionResponse;
 import com.wifi.security.repository.DetectionEventRepository;
+import com.wifi.security.service.AlertService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,12 @@ class Layer1ServiceTest {
     @Mock
     private DetectionEventRepository eventRepository;
 
+    @Mock
+    private AlertService alertService;
+
+    @Mock
+    private com.wifi.security.repository.WiFiNetworkRepository wifiNetworkRepository;
+
     private Layer1Service layer1Service;
     private MeterRegistry meterRegistry;
 
@@ -62,7 +69,9 @@ class Layer1ServiceTest {
                 timeAnomalyDetector,
                 sessionStateChecker,
                 meterRegistry,
-                eventRepository);
+                eventRepository,
+                alertService,
+                wifiNetworkRepository);
 
         ReflectionTestUtils.setField(layer1Service, "attackThreshold", 50);
         ReflectionTestUtils.setField(layer1Service, "suspiciousThreshold", 30);

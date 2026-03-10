@@ -76,30 +76,76 @@ public class DetectionEvent {
     /**
      * Layer 1 (Rate Analysis) score (0-40).
      */
-    @Column(name = "layer1_score", nullable = false, columnDefinition = "TINYINT UNSIGNED")
+    @Column(name = "layer1_score", nullable = false, columnDefinition = "SMALLINT UNSIGNED")
     @Builder.Default
     private Integer layer1Score = 0;
 
     /**
-     * Layer 2 (Sequence Analysis) score (0-30).
+     * Layer 2 (ML Component) score (0-100).
      */
-    @Column(name = "layer2_score", nullable = false, columnDefinition = "TINYINT UNSIGNED")
+    @com.fasterxml.jackson.annotation.JsonProperty("layer2Score")
+    @Column(name = "layer2_score", nullable = false, columnDefinition = "SMALLINT UNSIGNED")
     @Builder.Default
     private Integer layer2Score = 0;
 
     /**
+     * Machine Learning Prediction classification.
+     */
+    @com.fasterxml.jackson.annotation.JsonProperty("mlPrediction")
+    @Column(name = "ml_prediction", length = 50)
+    private String mlPrediction;
+
+    /**
+     * ML Model Confidence (0.0 to 1.0)
+     */
+    @com.fasterxml.jackson.annotation.JsonProperty("mlConfidence")
+    @Column(name = "ml_confidence")
+    private Double mlConfidence;
+
+    /**
+     * Model agreement string (e.g. "4/4")
+     */
+    @com.fasterxml.jackson.annotation.JsonProperty("modelAgreement")
+    @Column(name = "model_agreement", length = 10)
+    private String modelAgreement;
+
+    /**
      * Layer 3 (Context Analysis) score (0-30).
      */
-    @Column(name = "layer3_score", nullable = false, columnDefinition = "TINYINT UNSIGNED")
+    @Column(name = "layer3_score", nullable = false, columnDefinition = "SMALLINT UNSIGNED")
     @Builder.Default
     private Integer layer3Score = 0;
 
     /**
+     * Layer 3 (Context Analysis) reasoning/notes.
+     */
+    @Column(name = "layer3_notes", columnDefinition = "TEXT")
+    private String layer3Notes;
+
+    /**
      * Combined score from all layers (0-100).
      */
-    @Column(name = "total_score", nullable = false, columnDefinition = "TINYINT UNSIGNED")
+    @com.fasterxml.jackson.annotation.JsonProperty("totalScore")
+    @Column(name = "total_score", nullable = false, columnDefinition = "SMALLINT UNSIGNED")
     @Builder.Default
     private Integer totalScore = 0;
+
+    // Per-analyzer sub-scores for frontend heuristics breakdown
+    @Column(name = "rate_analyzer_score", columnDefinition = "SMALLINT UNSIGNED DEFAULT 0")
+    @Builder.Default
+    private Integer rateAnalyzerScore = 0;
+
+    @Column(name = "seq_validator_score", columnDefinition = "SMALLINT UNSIGNED DEFAULT 0")
+    @Builder.Default
+    private Integer seqValidatorScore = 0;
+
+    @Column(name = "time_anomaly_score", columnDefinition = "SMALLINT UNSIGNED DEFAULT 0")
+    @Builder.Default
+    private Integer timeAnomalyScore = 0;
+
+    @Column(name = "session_state_score", columnDefinition = "SMALLINT UNSIGNED DEFAULT 0")
+    @Builder.Default
+    private Integer sessionStateScore = 0;
 
     /**
      * Suspected attacker MAC address.
@@ -213,6 +259,23 @@ public class DetectionEvent {
     @Column(name = "evidence", columnDefinition = "JSON")
     private Map<String, Object> evidence;
 
+    // ── RSSI Attacker Identification ─────────────────────────────────
+    @Column(name = "is_spoofed")
+    @Builder.Default
+    private Boolean isSpoofed = false;
+
+    @Column(name = "real_attacker_mac", length = 17)
+    private String realAttackerMac;
+
+    @Column(name = "attacker_confidence")
+    private Integer attackerConfidence;
+
+    @Column(name = "rssi_deviation")
+    private Double rssiDeviation;
+
+    @Column(name = "detection_method", length = 50)
+    private String detectionMethod;
+
     /**
      * Record creation timestamp.
      */
@@ -286,11 +349,11 @@ public class DetectionEvent {
      * Determine severity from total score.
      */
     public static Severity severityFromScore(int score) {
-        if (score >= 80)
+        if (score >= 50)
             return Severity.CRITICAL;
-        if (score >= 60)
+        if (score >= 30)
             return Severity.HIGH;
-        if (score >= 40)
+        if (score >= 15)
             return Severity.MEDIUM;
         return Severity.LOW;
     }

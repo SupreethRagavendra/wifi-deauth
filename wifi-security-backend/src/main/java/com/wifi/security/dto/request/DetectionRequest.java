@@ -49,6 +49,8 @@ public class DetectionRequest {
      * 802.11 frame type (e.g., DEAUTH, DISASSOC, AUTH, etc.)
      */
     private String frameType;
+    private String realAttackerMac;
+    private Boolean isSpoofed;
 
     /**
      * 802.11 sequence number (0-4095).

@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: wifi-ml-service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./ml-service/saved_models:/app/saved_models
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

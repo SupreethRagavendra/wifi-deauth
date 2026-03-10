@@ -45,6 +45,24 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name = "mac_address", length = 17, unique = true)
+    private String macAddress;
+
+    @Column(name = "wifi_adapter", length = 20)
+    @Builder.Default
+    private String wifiAdapter = "wlan1";
+
+    @Column(name = "phone_number", length = 15)
+    private String phoneNumber;
+
+    @Column(name = "alerts_email", nullable = false)
+    @Builder.Default
+    private Boolean alertsEmail = true;
+
+    @Column(name = "alerts_sms", nullable = false)
+    @Builder.Default
+    private Boolean alertsSms = true;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private UserRole role;

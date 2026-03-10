@@ -7,7 +7,7 @@ import { Button, Input, Alert } from '../components/ui';
 import { PeekingMascot } from '../components/ui/PeekingMascot';
 import { useAuth } from '../context/AuthContext';
 import { loginSchema, LoginFormData } from '../utils/validationSchemas';
-import { ShieldCheckIcon, CheckBadgeIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon } from '@heroicons/react/24/outline';
 
 export const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -89,7 +89,7 @@ export const Login: React.FC = () => {
                         <div className="flex items-center gap-3">
                             <ShieldCheckIcon className="h-8 w-8 text-primary" strokeWidth={1.5} />
                             <span className="text-xl font-bold text-slate-900 tracking-tight uppercase font-mono">
-                                Secure Console
+                                wifi shield
                             </span>
                         </div>
                         {/* Peeking Mascot */}
@@ -149,16 +149,7 @@ export const Login: React.FC = () => {
                     />
 
                     {/* Remember & Forgot Password */}
-                    <div className="flex items-center justify-between py-2">
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                            <input
-                                type="checkbox"
-                                className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
-                            />
-                            <span className="text-xs font-medium text-slate-500 group-hover:text-slate-800 transition-colors">
-                                Authorize Device
-                            </span>
-                        </label>
+                    <div className="flex items-center justify-end py-2">
                         <Link
                             to="/forgot-password"
                             className="text-xs font-bold text-primary hover:text-primary-dark transition-colors"
@@ -189,20 +180,7 @@ export const Login: React.FC = () => {
                     </div>
                 </form>
 
-                {/* Security Notice */}
-                <div className="mt-12 pt-6 border-t border-slate-100">
-                    <div className="flex items-center gap-3 text-slate-400 mb-3">
-                        <CheckBadgeIcon className="h-5 w-5" strokeWidth={1.5} />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.15em] font-mono">
-                            Identity Verification Active
-                        </span>
-                    </div>
-                    <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm">
-                        Access to this system is restricted to authorized personnel only. All connection
-                        attempts and activity logs are monitored under <b className="text-slate-500">PROTOCOL 44-B</b>.
-                        Unauthorized access will be traced and reported.
-                    </p>
-                </div>
+
             </div>
         </AuthLayout>
     );

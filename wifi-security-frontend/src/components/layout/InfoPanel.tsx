@@ -88,24 +88,10 @@ export const InfoPanel: React.FC = () => {
                 {/* Divider */}
                 <div className="h-1 w-12 bg-white/60 mb-6" />
 
-                {/* Description */}
-                <p className="text-blue-50 text-center max-w-sm leading-relaxed font-light">
-                    Secure access gateway for enterprise network infrastructure.
-                    <span className="block mt-2 text-blue-200 text-sm font-mono">
-                        SYSTEM STATUS: ENCRYPTED
-                    </span>
-                </p>
+
             </div>
 
-            {/* Bottom info bar */}
-            <div className="absolute bottom-10 text-blue-200/60 text-[10px] font-mono flex items-center gap-8 uppercase tracking-widest">
-                <span className="flex items-center gap-2 border-l border-white/30 pl-2">
-                    Protocol: AES-256-GCM
-                </span>
-                <span className="flex items-center gap-2 border-l border-white/30 pl-2">
-                    Node: US-EAST-01
-                </span>
-            </div>
+
         </div>
     );
 };

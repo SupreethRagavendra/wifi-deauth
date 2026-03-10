@@ -1,16 +1,22 @@
 package com.wifi.security.controller;
 
 import com.wifi.security.dto.AlertDTO;
+import com.wifi.security.dto.AttackAlertData;
 import com.wifi.security.service.DetectionService;
 import com.wifi.security.service.AlertService;
 import com.wifi.security.service.layer1.Layer1Service;
 import com.wifi.security.entity.detection.DetectionEvent;
 import com.wifi.security.repository.DetectionEventRepository;
+import com.wifi.security.entity.User;
+import com.wifi.security.enums.UserRole;
+import com.wifi.security.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -18,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping("/api/detection")
@@ -39,12 +46,55 @@ public class DetectionController {
     @Autowired
     private DetectionEventRepository eventRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private com.wifi.security.repository.UserWiFiMappingRepository userWiFiMappingRepository;
+
+    @Autowired
+    private com.wifi.security.service.AlertNotificationService alertNotificationService;
+
+    // ─── Helper: get institute ID from JWT ──────────────────────────────────
+    private String getCurrentInstituteId() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.getName() != null) {
+                return userRepository.findByEmail(auth.getName())
+                        .map(u -> u.getInstitute() != null ? u.getInstitute().getInstituteId() : null)
+                        .orElse(null);
+            }
+        } catch (Exception e) {
+            logger.warn("Could not extract instituteId from security context: {}", e.getMessage());
+        }
+        return null;
+    }
+
     @PostMapping("/alert")
     public ResponseEntity<?> receiveAlert(@RequestBody AlertDTO alert) {
         logger.warn("🚨 ALERT RECEIVED: type={} severity={} attacker={}",
                 alert.getType(), alert.getSeverity(), alert.getAttackerMac());
 
         alertService.processAlert(alert);
+
+        // Send email/SMS notifications
+        try {
+            AttackAlertData alertData = AttackAlertData.builder()
+                    .attackerMac(alert.getAttackerMac() != null ? alert.getAttackerMac() : "UNKNOWN")
+                    .victimMac(alert.getTargetMac() != null ? alert.getTargetMac() : "UNKNOWN")
+                    .confidence(alert.getMlConfidence() != null ? alert.getMlConfidence() * 100
+                            : (alert.getScore() != null ? alert.getScore() : 0))
+                    .ssid(alert.getTargetBssid() != null ? alert.getTargetBssid() : "N/A")
+                    .timestamp(alert.getTimestamp() != null ? alert.getTimestamp()
+                            : java.time.LocalDateTime.now().toString())
+                    .defenseLevel(alert.getSeverity() != null ? alert.getSeverity() : "LOW")
+                    .channel(alert.getChannel() > 0 ? String.valueOf(alert.getChannel()) : "N/A")
+                    .status("detected")
+                    .build();
+            alertNotificationService.notifyAttack(alertData.getSsid(), alertData);
+        } catch (Exception e) {
+            logger.error("Failed to send attack notifications: {}", e.getMessage());
+        }
 
         return ResponseEntity.ok(Map.of(
                 "status", "alert_processed",
@@ -53,31 +103,61 @@ public class DetectionController {
 
     @GetMapping("/live-status")
     public ResponseEntity<?> getLiveStatus() {
-        LocalDateTime cutoff15sec = LocalDateTime.now().minusSeconds(15);
+        LocalDateTime cutoff30sec = LocalDateTime.now().minusSeconds(30);
         LocalDateTime cutoff1hour = LocalDateTime.now().minusHours(1);
 
-        List<DetectionEvent> last15sec = eventRepository.findByDetectedAtAfter(cutoff15sec);
-        List<DetectionEvent> lastHour = eventRepository.findByDetectedAtAfter(cutoff1hour);
+        String instituteId = getCurrentInstituteId();
 
-        boolean underAttack = last15sec.stream()
-                .anyMatch(e -> e.getSeverity().name()
-                        .equals("CRITICAL") ||
-                        e.getSeverity().name().equals("HIGH"));
+        List<DetectionEvent> last30sec;
+        List<DetectionEvent> lastHour;
 
-        int activeThreats = (int) last15sec.stream()
-                .filter(e -> e.getSeverity().name()
-                        .equals("CRITICAL") ||
-                        e.getSeverity().name().equals("HIGH"))
+        if (instituteId != null) {
+            last30sec = eventRepository.findByInstituteIdAndDetectedAtAfter(instituteId, cutoff30sec);
+            lastHour = eventRepository.findByInstituteIdAndDetectedAtAfter(instituteId, cutoff1hour);
+        } else {
+            last30sec = eventRepository.findByDetectedAtAfter(cutoff30sec);
+            lastHour = eventRepository.findByDetectedAtAfter(cutoff1hour);
+        }
+
+        boolean underAttack = last30sec.stream()
+                .anyMatch(e -> e.getSeverity().name().equals("CRITICAL") ||
+                        e.getSeverity().name().equals("HIGH") ||
+                        e.getSeverity().name().equals("MEDIUM"));
+
+        int activeThreats = (int) last30sec.stream()
+                .filter(e -> e.getSeverity().name().equals("CRITICAL") ||
+                        e.getSeverity().name().equals("HIGH") ||
+                        e.getSeverity().name().equals("MEDIUM"))
                 .count();
 
-        return ResponseEntity.ok(Map.of(
-                "systemStatus", underAttack ? "UNSAFE" : "SAFE",
-                "activeThreats", activeThreats,
-                "threatsLastHour", (int) lastHour.stream()
-                        .filter(e -> e.getSeverity().name().equals("CRITICAL") || e.getSeverity().name().equals("HIGH"))
-                        .count(),
-                "underAttack", underAttack,
-                "timestamp", LocalDateTime.now().toString()));
+        int threatsLastHour = (int) lastHour.stream()
+                .filter(e -> !e.getSeverity().name().equals("LOW"))
+                .count();
+
+        // Severity breakdown for detection monitor (Issue 5)
+        long criticalCount = lastHour.stream()
+                .filter(e -> e.getSeverity() == DetectionEvent.Severity.CRITICAL).count();
+        long highCount = lastHour.stream()
+                .filter(e -> e.getSeverity() == DetectionEvent.Severity.HIGH).count();
+        long mediumCount = lastHour.stream()
+                .filter(e -> e.getSeverity() == DetectionEvent.Severity.MEDIUM).count();
+        long lowCount = lastHour.stream()
+                .filter(e -> e.getSeverity() == DetectionEvent.Severity.LOW).count();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("systemStatus", underAttack ? "UNSAFE" : "SAFE");
+        result.put("activeThreats", activeThreats);
+        result.put("threatsLastHour", threatsLastHour);
+        result.put("underAttack", underAttack);
+        result.put("timestamp", LocalDateTime.now().toString());
+        result.put("severityBreakdown", Map.of(
+                "critical", criticalCount,
+                "high", highCount,
+                "medium", mediumCount,
+                "low", lowCount,
+                "normal", 0));
+
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/status")
@@ -116,20 +196,74 @@ public class DetectionController {
         alertService.clearAlerts();
         detectionService.resetStats();
         layer1Service.clearAllEvents(); // Clear database events
+
+        // Also reset ML service in-memory counters (fire-and-forget)
+        try {
+            new RestTemplate().postForObject(
+                    "http://localhost:5000/reset-stats", null, String.class);
+            logger.info("ML service stats reset successfully");
+        } catch (Exception e) {
+            logger.warn("Could not reset ML stats (ML service may be offline): {}", e.getMessage());
+        }
+
         return ResponseEntity.ok(Map.of("message", "All detection events cleared"));
     }
 
     /**
      * Endpoint for frontend: GET /api/detection/events/recent
-     * Returns actual DetectionEvent entities from database
+     * Returns actual DetectionEvent entities from database, scoped to the admin's
+     * institute.
      */
     @GetMapping("/events/recent")
     public ResponseEntity<?> getRecentDetectionEvents() {
         logger.debug("Frontend requesting recent detection events");
 
         try {
-            List<DetectionEvent> events = layer1Service.getRecentEvents();
-            logger.info("Returning {} detection events from database", events.size());
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            // If no auth (prevention engine, internal service call), return all recent
+            // events
+            if (auth == null || auth.getName() == null
+                    || "anonymousUser".equals(auth.getName())) {
+                List<DetectionEvent> allRecent = layer1Service.getRecentEvents();
+                logger.debug("Returning {} events for unauthenticated caller", allRecent.size());
+                return ResponseEntity.ok(allRecent != null ? allRecent : List.of());
+            }
+
+            com.wifi.security.entity.User user = userRepository.findByEmail(auth.getName()).orElse(null);
+            if (user == null) {
+                List<DetectionEvent> allRecent = layer1Service.getRecentEvents();
+                return ResponseEntity.ok(allRecent != null ? allRecent : List.of());
+            }
+
+            String instituteId = user.getInstitute() != null ? user.getInstitute().getInstituteId() : null;
+
+            List<DetectionEvent> events = List.of();
+            if (user.getRole() == com.wifi.security.enums.UserRole.VIEWER) {
+                // Issue 6: Viewers only see attacks targeting their registered MAC
+                String userMac = user.getMacAddress();
+                if (userMac != null && !userMac.isEmpty()) {
+                    List<String> macs = List.of(userMac.toUpperCase(), userMac.toLowerCase());
+                    if (instituteId != null) {
+                        events = eventRepository.findTop50ByInstituteIdAndTargetMacInOrderByDetectedAtDesc(
+                                instituteId, macs);
+                    } else {
+                        events = eventRepository.findTop50ByTargetMacInOrderByDetectedAtDesc(macs);
+                    }
+                    logger.info("Returning {} MAC-filtered events for viewer {} (MAC: {})",
+                            events.size(), user.getEmail(), userMac);
+                } else {
+                    logger.info("Viewer {} has no registered MAC, returning empty", user.getEmail());
+                }
+            } else {
+                // Admin: see all events
+                if (instituteId != null) {
+                    events = eventRepository.findTop20ByInstituteIdOrderByDetectedAtDesc(instituteId);
+                } else {
+                    events = layer1Service.getRecentEvents();
+                }
+                logger.info("Returning {} events for admin {}", events.size(), user.getEmail());
+            }
+
             return ResponseEntity.ok(events != null ? events : List.of());
         } catch (Exception e) {
             logger.error("Error fetching events: {}", e.getMessage());
@@ -138,10 +272,7 @@ public class DetectionController {
     }
 
     private int calculateScore(AlertDTO alert) {
-        // Calculate a threat score (0-100) based on alert data
         int score = 0;
-
-        // Base score from severity
         if ("CRITICAL".equals(alert.getSeverity()))
             score = 85;
         else if ("HIGH".equals(alert.getSeverity()))
@@ -151,7 +282,6 @@ public class DetectionController {
         else
             score = 15;
 
-        // Bonus for packet count
         if (alert.getPacketCount() > 50)
             score += 10;
         else if (alert.getPacketCount() > 20)

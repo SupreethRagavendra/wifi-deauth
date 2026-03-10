@@ -11,9 +11,14 @@ import {
   Register,
   Login,
   AdminDashboard,
+  AdminSettings,
   ViewerDashboard,
+  ViewerDetection,
+  ViewerSettings,
   HomeDashboard,
   DetectionMonitor,
+  PreventionDashboard,
+  LandingPage,
 } from './pages';
 import './index.css';
 
@@ -67,7 +72,7 @@ const HomeRedirect: React.FC = () => {
     return <Navigate to={getDefaultDashboard(user.role)} replace />;
   }
 
-  return <Navigate to="/login" replace />;
+  return <LandingPage />;
 };
 
 // App Routes
@@ -87,6 +92,14 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/settings"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <AdminSettings />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Protected routes - Viewer */}
       <Route
@@ -97,6 +110,22 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/viewer/detection"
+        element={
+          <ProtectedRoute allowedRoles={['VIEWER']}>
+            <ViewerDetection />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/viewer/settings"
+        element={
+          <ProtectedRoute allowedRoles={['VIEWER']}>
+            <ViewerSettings />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Protected routes - Home User */}
       <Route
@@ -104,6 +133,16 @@ const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute allowedRoles={['HOME_USER']}>
             <HomeDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected routes - Prevention (Admin only) */}
+      <Route
+        path="/prevention"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <PreventionDashboard />
           </ProtectedRoute>
         }
       />
