@@ -120,7 +120,8 @@ export const authService = {
                 role,
                 instituteName,
                 instituteCode,
-                instituteType
+                instituteType,
+                macAddress
             } = response.data;
 
             setToken(token);
@@ -133,6 +134,7 @@ export const authService = {
                 role,
                 instituteName,
                 instituteCode,
+                macAddress,
                 createdAt: new Date().toISOString(),
             };
 
@@ -169,7 +171,8 @@ export const authService = {
                 role,
                 instituteName,
                 instituteCode,
-                instituteType
+                instituteType,
+                macAddress
             } = response.data;
 
             setToken(token);
@@ -182,6 +185,7 @@ export const authService = {
                 role,
                 instituteName,
                 instituteCode,
+                macAddress,
                 createdAt: new Date().toISOString(),
             };
 
@@ -218,7 +222,8 @@ export const authService = {
                 role,
                 instituteName,
                 instituteCode,
-                instituteType
+                instituteType,
+                macAddress
             } = response.data;
 
             setToken(token);
@@ -231,6 +236,7 @@ export const authService = {
                 role,
                 instituteName,
                 instituteCode,
+                macAddress,
                 createdAt: new Date().toISOString(),
             };
 
@@ -260,7 +266,8 @@ export const authService = {
                 role,
                 instituteName,
                 instituteCode,
-                instituteType
+                instituteType,
+                macAddress
             } = response.data;
 
             setToken(token);
@@ -273,6 +280,7 @@ export const authService = {
                 role,
                 instituteName,
                 instituteCode,
+                macAddress,
                 createdAt: new Date().toISOString(), // Backend doesn't return this, using current time
             };
 

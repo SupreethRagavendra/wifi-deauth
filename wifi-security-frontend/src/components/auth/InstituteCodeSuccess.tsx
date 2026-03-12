@@ -88,10 +88,10 @@ export const InstituteCodeSuccess: React.FC<InstituteCodeSuccessProps> = ({
                     {/* Institute Code Card */}
                     <Card
                         variant="bordered"
-                        className="mt-6 text-center bg-background-tertiary"
+                        className="mt-6 text-center bg-gray-100"
                         padding="md"
                     >
-                        <p className="text-caption text-text-muted uppercase tracking-wider mb-2">
+                        <p className="text-caption text-gray-500 uppercase tracking-wider mb-2">
                             Your Institute Code
                         </p>
                         <div className="flex items-center justify-center gap-3">

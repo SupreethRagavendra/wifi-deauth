@@ -22,5 +22,6 @@ public class AuthResponse {
     private String instituteName;
     private String instituteCode;
     private String instituteType;
+    private String macAddress;
     private String message;
 }

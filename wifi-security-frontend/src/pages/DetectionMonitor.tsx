@@ -23,7 +23,7 @@ export const DetectionMonitor: React.FC = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
     const { latestAlert } = useDetectionStatus();
-    const { threatsLastHour } = useLiveStatus();
+    const { threatsLastHour, severityBreakdown } = useLiveStatus();
 
     const [events, setEvents] = useState<DetectionEvent[]>([]);
     const [networks, setNetworks] = useState<WiFiNetwork[]>([]);
@@ -155,8 +155,17 @@ export const DetectionMonitor: React.FC = () => {
         });
     const isFiltered = selectedNetwork !== 'all';
 
-    // Stats calculations (operate on filtered events)
-    const stats = {
+    // Stats calculations — use server-side severity breakdown (DB-authoritative, time-windowed)
+    // Falls back to local array counting when severityBreakdown is empty
+    const hasServerStats = severityBreakdown && (severityBreakdown.critical + severityBreakdown.high + severityBreakdown.medium + severityBreakdown.low) > 0;
+    const stats = hasServerStats ? {
+        total: (severityBreakdown.critical || 0) + (severityBreakdown.high || 0) + (severityBreakdown.medium || 0) + (severityBreakdown.low || 0),
+        active: activeThreats,
+        normal: severityBreakdown.low || 0,
+        suspicious: severityBreakdown.medium || 0,
+        attacks: (severityBreakdown.high || 0) + (severityBreakdown.critical || 0),
+        critical: severityBreakdown.critical || 0,
+    } : {
         total: filteredEvents.length,
         active: activeThreats,
         normal: filteredEvents.filter(e => e.severity === 'LOW').length,

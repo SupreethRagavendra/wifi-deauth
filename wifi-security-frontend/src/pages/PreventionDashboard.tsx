@@ -137,6 +137,7 @@ const PreventionDashboard: React.FC = () => {
     const [honeypotLoading, setHoneypotLoading] = useState(false);
     const [firedComponents, setFiredComponents] = useState<Set<string>>(new Set());
     const [showForensics, setShowForensics] = useState(false);
+    const [forensicTab, setForensicTab] = useState<'pdf' | 'pcap'>('pdf');
     const [forensicReports, setForensicReports] = useState<{ reports: any[], pcaps: any[] }>({ reports: [], pcaps: [] });
 
     /* ── fetch data ── */
@@ -511,7 +512,7 @@ const PreventionDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* ── Forensic Reports Section ── */}
+                {/* ── Forensic Reports & PCAP Captures Section ── */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <button
                         onClick={async () => {
@@ -528,40 +529,83 @@ const PreventionDashboard: React.FC = () => {
                         <div className="flex items-center gap-3">
                             <DocumentTextIcon className="h-5 w-5 text-blue-500" />
                             <span className="text-sm font-semibold text-gray-900">Forensic Reports & PCAP Captures</span>
-                            <span className="text-xs text-gray-400">
-                                {forensicReports.reports.length + forensicReports.pcaps.length} files
+                            <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
+                                <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-600 font-bold">{forensicReports.reports.length} PDF</span>
+                                <span>+</span>
+                                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold">{forensicReports.pcaps.length} PCAP</span>
                             </span>
                         </div>
                         <span className="text-gray-400 text-sm">{showForensics ? '▲ Hide' : '▼ Show'}</span>
                     </button>
 
                     {showForensics && (
-                        <div className="px-6 pb-5 border-t border-gray-50">
+                        <div className="border-t border-gray-50">
                             {forensicReports.reports.length === 0 && forensicReports.pcaps.length === 0 ? (
-                                <p className="text-sm text-gray-400 py-4 text-center">No forensic reports yet. Reports are generated during attack events.</p>
+                                <p className="text-sm text-gray-400 py-8 text-center">No forensic reports yet. Reports are generated during attack events.</p>
                             ) : (
-                                <div className="space-y-3 mt-4">
-                                    {[...forensicReports.reports, ...forensicReports.pcaps].map((file, i) => (
-                                        <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${file.type === 'pdf'
-                                                    ? 'bg-red-100 text-red-700'
-                                                    : 'bg-blue-100 text-blue-700'
-                                                    }`}>{file.type}</span>
-                                                <span className="text-sm font-medium text-gray-800 truncate max-w-[300px]">{file.filename}</span>
-                                                <span className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</span>
-                                            </div>
-                                            <a
-                                                href={`${PREVENTION_API}/forensics/download/${file.filename}`}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-semibold hover:bg-blue-100 transition-colors"
-                                                download
-                                            >
-                                                <ArrowDownTrayIcon className="h-3.5 w-3.5" />
-                                                Download
-                                            </a>
+                                <>
+                                    {/* Tabs */}
+                                    <div className="flex border-b border-gray-100">
+                                        <button
+                                            onClick={() => setForensicTab('pdf')}
+                                            className={`flex-1 py-3 text-sm font-semibold text-center transition-colors relative ${forensicTab === 'pdf'
+                                                ? 'text-red-600 bg-red-50/50'
+                                                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            <span className="flex items-center justify-center gap-2">
+                                                <DocumentTextIcon className="h-4 w-4" />
+                                                PDF Reports
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${forensicTab === 'pdf' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                    {forensicReports.reports.length}
+                                                </span>
+                                            </span>
+                                            {forensicTab === 'pdf' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />}
+                                        </button>
+                                        <button
+                                            onClick={() => setForensicTab('pcap')}
+                                            className={`flex-1 py-3 text-sm font-semibold text-center transition-colors relative ${forensicTab === 'pcap'
+                                                ? 'text-blue-600 bg-blue-50/50'
+                                                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            <span className="flex items-center justify-center gap-2">
+                                                <ServerStackIcon className="h-4 w-4" />
+                                                PCAP Captures
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${forensicTab === 'pcap' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                    {forensicReports.pcaps.length}
+                                                </span>
+                                            </span>
+                                            {forensicTab === 'pcap' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+                                        </button>
+                                    </div>
+
+                                    {/* File List */}
+                                    <div className="px-6 pb-5">
+                                        <div className="space-y-2 mt-4 max-h-[480px] overflow-y-auto">
+                                            {(forensicTab === 'pdf' ? forensicReports.reports : forensicReports.pcaps).map((file, i) => (
+                                                <div key={i} className="flex items-center justify-between py-2.5 px-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex-shrink-0 ${file.type === 'pdf'
+                                                            ? 'bg-red-100 text-red-700'
+                                                            : 'bg-blue-100 text-blue-700'
+                                                            }`}>{file.type}</span>
+                                                        <span className="text-sm font-medium text-gray-800 truncate">{file.filename}</span>
+                                                        <span className="text-xs text-gray-400 flex-shrink-0">{(file.size / 1024).toFixed(1)} KB</span>
+                                                    </div>
+                                                    <a
+                                                        href={`${PREVENTION_API}/forensics/download/${file.filename}`}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-semibold hover:bg-blue-100 transition-colors flex-shrink-0 ml-3"
+                                                        download
+                                                    >
+                                                        <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                                                        Download
+                                                    </a>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                </>
                             )}
                         </div>
                     )}

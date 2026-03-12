@@ -291,10 +291,18 @@ public class DetectionService {
                         preBonus, totalBonus, finalScore, burstBonus, rssiBoost, packet.getSrc());
             }
 
-            // ── Deauth frame floor (applied AFTER bonuses) ────────────────
-            // Any deauth frame should have a minimum score of 15 (MEDIUM)
+            // ── Deauth frame floor (reason-code-aware) ────────────────
+            // Normal disconnects (reason 3 = STA leaving, reason 8 = disassociated)
+            // should be allowed to score LOW. All other deauth frames get a
+            // minimum score of 15 (MEDIUM) since they're suspicious by default.
             if ("DEAUTH".equalsIgnoreCase(request.getFrameType())) {
-                finalScore = Math.max(finalScore, 15);
+                int reason = packet.getReason();
+                boolean isNormalDisconnect = (reason == 3 || reason == 8);
+                if (!isNormalDisconnect) {
+                    finalScore = Math.max(finalScore, 15);
+                }
+                // Normal disconnects: no floor — allow score to stay at natural level (possibly
+                // 0 → LOW)
             }
 
             // ── Safety floor: use normalized L1 (not raw) ─────────────────

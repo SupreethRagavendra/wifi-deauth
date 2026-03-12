@@ -1,5 +1,6 @@
 package com.wifi.security.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +19,7 @@ public class FacultyDashboardResponse {
     private String threatLevel;
     private String activeBssid;
     private String activeSsid;
+
+    @JsonProperty("isDeviceConnected")
     private boolean isDeviceConnected;
 }

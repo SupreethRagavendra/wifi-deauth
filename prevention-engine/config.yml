@@ -4,10 +4,10 @@
 
 # ── Database (Aiven Cloud MySQL) ──
 database:
-  host: "mysql-14d3f3be-supreethvennila-ef7e.i.aivencloud.com"
-  port: 27574
+  host: "mysql-2a681751-supreethvennila69-f64d.e.aivencloud.com"
+  port: 23766
   user: "avnadmin"
-  password: "AVNS_HRcY66WVAs6uUCoGIad"
+  password: "AVNS_********"
   name: "wifi_deauth"
   ssl_disabled: false
   connection_timeout: 10

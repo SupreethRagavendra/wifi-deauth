@@ -1,0 +1,1 @@
+{"error":"Bad Request","message":"Invalid request body or parameters","status":400,"timestamp":"2026-03-12 13:13:27","path":"/api/auth/register/admin"}

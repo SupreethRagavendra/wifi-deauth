@@ -337,4 +337,236 @@ public class DetectionController {
 
         return emitter;
     }
+
+    /**
+     * GET /api/detection/stats — Aggregated detection statistics.
+     * Used by the useDetectionStats frontend hook.
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<?> getDetectionStats() {
+        LocalDateTime cutoff1hour = LocalDateTime.now().minusHours(1);
+        String instituteId = getCurrentInstituteId();
+
+        List<DetectionEvent> lastHour;
+        if (instituteId != null) {
+            lastHour = eventRepository.findByInstituteIdAndDetectedAtAfter(instituteId, cutoff1hour);
+        } else {
+            lastHour = eventRepository.findByDetectedAtAfter(cutoff1hour);
+        }
+
+        long criticalCount = lastHour.stream()
+                .filter(e -> e.getSeverity() == DetectionEvent.Severity.CRITICAL).count();
+        long highCount = lastHour.stream()
+                .filter(e -> e.getSeverity() == DetectionEvent.Severity.HIGH).count();
+        long mediumCount = lastHour.stream()
+                .filter(e -> e.getSeverity() == DetectionEvent.Severity.MEDIUM).count();
+        long lowCount = lastHour.stream()
+                .filter(e -> e.getSeverity() == DetectionEvent.Severity.LOW).count();
+        long attackEvents = criticalCount + highCount;
+
+        LocalDateTime cutoff30sec = LocalDateTime.now().minusSeconds(30);
+        List<DetectionEvent> last30sec;
+        if (instituteId != null) {
+            last30sec = eventRepository.findByInstituteIdAndDetectedAtAfter(instituteId, cutoff30sec);
+        } else {
+            last30sec = eventRepository.findByDetectedAtAfter(cutoff30sec);
+        }
+        int activeEvents = (int) last30sec.stream()
+                .filter(e -> e.getSeverity() != DetectionEvent.Severity.LOW).count();
+
+        boolean underAttack = last30sec.stream()
+                .anyMatch(e -> e.getSeverity() == DetectionEvent.Severity.CRITICAL ||
+                        e.getSeverity() == DetectionEvent.Severity.HIGH);
+
+        // Fetch ML stats from ml-service (best effort)
+        int mlModelsLoaded = 0;
+        double avgConfidence = 0.0;
+        double agreementRate = 0.0;
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> mlStats = new RestTemplate().getForObject(
+                    "http://localhost:5000/model-stats", Map.class);
+            if (mlStats != null) {
+                mlModelsLoaded = mlStats.get("models_loaded") != null
+                        ? ((Number) mlStats.get("models_loaded")).intValue()
+                        : 0;
+                avgConfidence = mlStats.get("average_confidence") != null
+                        ? ((Number) mlStats.get("average_confidence")).doubleValue()
+                        : 0.0;
+                agreementRate = mlStats.get("model_agreement_rate") != null
+                        ? ((Number) mlStats.get("model_agreement_rate")).doubleValue()
+                        : 0.0;
+            }
+        } catch (Exception e) {
+            logger.debug("ML service not reachable for stats: {}", e.getMessage());
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("total_packets", detectionService.getTotalPacketCount());
+        result.put("total_events", lastHour.size());
+        result.put("attack_events", attackEvents);
+        result.put("critical_events", criticalCount);
+        result.put("suspicious_events", mediumCount);
+        result.put("current_status", underAttack ? "UNSAFE" : "SAFE");
+        result.put("active_events", activeEvents);
+        result.put("attacks_1hr", attackEvents + mediumCount);
+        result.put("ml_models_loaded", mlModelsLoaded);
+        result.put("avg_confidence", avgConfidence);
+        result.put("agreement_rate", agreementRate);
+        result.put("low_events", lowCount);
+
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * POST /api/detection/inject-test-data — Insert synthetic events for
+     * demo/testing.
+     * Creates 20 events: 5 CRITICAL, 5 HIGH, 5 MEDIUM, 5 LOW.
+     */
+    @PostMapping("/inject-test-data")
+    public ResponseEntity<?> injectTestData() {
+        logger.info("Injecting 20 test detection events");
+
+        String[] attackerMacs = {
+                "AA:BB:CC:11:22:33", "AA:BB:CC:44:55:66", "AA:BB:CC:77:88:99",
+                "AA:BB:CC:AA:BB:CC", "AA:BB:CC:DD:EE:FF"
+        };
+        String[] targetMacs = {
+                "11:22:33:44:55:66", "22:33:44:55:66:77", "33:44:55:66:77:88",
+                "44:55:66:77:88:99", "55:66:77:88:99:AA"
+        };
+        String[] bssids = {
+                "00:11:22:33:44:55", "00:11:22:33:44:56", "00:11:22:33:44:57",
+                "00:11:22:33:44:58", "00:11:22:33:44:59"
+        };
+
+        String instituteId = getCurrentInstituteId();
+        int created = 0;
+
+        // 5 CRITICAL events (score 75-95)
+        for (int i = 0; i < 5; i++) {
+            int score = 75 + (i * 5);
+            DetectionEvent event = DetectionEvent.builder()
+                    .attackerMac(attackerMacs[i])
+                    .targetMac(targetMacs[i])
+                    .targetBssid(bssids[i])
+                    .instituteId(instituteId)
+                    .layer1Score(score)
+                    .layer2Score((int) (score * 0.9))
+                    .layer3Score((int) (score * 0.5))
+                    .totalScore(score)
+                    .severity(DetectionEvent.Severity.CRITICAL)
+                    .attackType(DetectionEvent.AttackType.DEAUTH_FLOOD)
+                    .frameCount(50 + i * 20)
+                    .attackDurationMs(5000 + i * 2000)
+                    .mlPrediction("Attack")
+                    .mlConfidence(0.85 + i * 0.03)
+                    .modelAgreement("4/4")
+                    .rateAnalyzerScore(30 + i)
+                    .seqValidatorScore(20 + i)
+                    .timeAnomalyScore(10 + i)
+                    .sessionStateScore(15 + i)
+                    .detectedAt(LocalDateTime.now().minusMinutes(i * 2))
+                    .attackStart(LocalDateTime.now().minusMinutes(i * 2 + 1))
+                    .build();
+            eventRepository.save(event);
+            created++;
+        }
+
+        // 5 HIGH events (score 30-48)
+        for (int i = 0; i < 5; i++) {
+            int score = 30 + (i * 4);
+            DetectionEvent event = DetectionEvent.builder()
+                    .attackerMac("DD:EE:FF:" + String.format("%02X:%02X:%02X", i + 1, i + 2, i + 3))
+                    .targetMac(targetMacs[i])
+                    .targetBssid(bssids[i % 3])
+                    .instituteId(instituteId)
+                    .layer1Score(score)
+                    .layer2Score((int) (score * 0.8))
+                    .layer3Score((int) (score * 0.3))
+                    .totalScore(score)
+                    .severity(DetectionEvent.Severity.HIGH)
+                    .attackType(DetectionEvent.AttackType.TARGETED_DEAUTH)
+                    .frameCount(15 + i * 5)
+                    .attackDurationMs(2000 + i * 1000)
+                    .mlPrediction("Attack")
+                    .mlConfidence(0.65 + i * 0.04)
+                    .modelAgreement("3/4")
+                    .rateAnalyzerScore(15 + i * 2)
+                    .seqValidatorScore(10 + i)
+                    .timeAnomalyScore(5 + i)
+                    .sessionStateScore(5 + i)
+                    .detectedAt(LocalDateTime.now().minusMinutes(12 + i * 2))
+                    .attackStart(LocalDateTime.now().minusMinutes(12 + i * 2 + 1))
+                    .build();
+            eventRepository.save(event);
+            created++;
+        }
+
+        // 5 MEDIUM (suspicious) events (score 15-25)
+        for (int i = 0; i < 5; i++) {
+            int score = 15 + (i * 2);
+            DetectionEvent event = DetectionEvent.builder()
+                    .attackerMac("CC:DD:EE:" + String.format("%02X:%02X:%02X", i + 10, i + 11, i + 12))
+                    .targetMac(targetMacs[i])
+                    .targetBssid(bssids[i % 3])
+                    .instituteId(instituteId)
+                    .layer1Score(score)
+                    .layer2Score(score / 2)
+                    .layer3Score(0)
+                    .totalScore(score)
+                    .severity(DetectionEvent.Severity.MEDIUM)
+                    .attackType(DetectionEvent.AttackType.UNKNOWN)
+                    .frameCount(3 + i)
+                    .attackDurationMs(500 + i * 200)
+                    .mlPrediction("Normal")
+                    .mlConfidence(0.45 + i * 0.03)
+                    .modelAgreement("2/4")
+                    .rateAnalyzerScore(5 + i)
+                    .seqValidatorScore(3 + i)
+                    .timeAnomalyScore(2 + i)
+                    .sessionStateScore(2 + i)
+                    .detectedAt(LocalDateTime.now().minusMinutes(25 + i * 2))
+                    .attackStart(LocalDateTime.now().minusMinutes(25 + i * 2 + 1))
+                    .build();
+            eventRepository.save(event);
+            created++;
+        }
+
+        // 5 LOW (normal disconnect) events (score 0-10)
+        for (int i = 0; i < 5; i++) {
+            int score = i * 2;
+            DetectionEvent event = DetectionEvent.builder()
+                    .attackerMac(targetMacs[i]) // Normal disconnects: "attacker" is the device itself
+                    .targetMac(targetMacs[i])
+                    .targetBssid(bssids[i % 3])
+                    .instituteId(instituteId)
+                    .layer1Score(score)
+                    .layer2Score(0)
+                    .layer3Score(0)
+                    .totalScore(score)
+                    .severity(DetectionEvent.Severity.LOW)
+                    .attackType(DetectionEvent.AttackType.UNKNOWN)
+                    .frameCount(1)
+                    .attackDurationMs(0)
+                    .mlPrediction("Normal")
+                    .mlConfidence(0.10 + i * 0.02)
+                    .modelAgreement("0/4")
+                    .rateAnalyzerScore(0)
+                    .seqValidatorScore(0)
+                    .timeAnomalyScore(0)
+                    .sessionStateScore(0)
+                    .detectedAt(LocalDateTime.now().minusMinutes(35 + i * 3))
+                    .attackStart(LocalDateTime.now().minusMinutes(35 + i * 3))
+                    .build();
+            eventRepository.save(event);
+            created++;
+        }
+
+        logger.info("Injected {} test detection events", created);
+        return ResponseEntity.ok(Map.of(
+                "message", "Test data injected successfully",
+                "events_created", created,
+                "breakdown", Map.of("CRITICAL", 5, "HIGH", 5, "MEDIUM", 5, "LOW", 5)));
+    }
 }

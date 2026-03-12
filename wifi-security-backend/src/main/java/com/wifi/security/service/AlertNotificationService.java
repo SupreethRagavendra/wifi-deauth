@@ -66,8 +66,10 @@ public class AlertNotificationService {
      * Notify all relevant users (admin + affected viewers) about an attack.
      */
     @Async
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public void notifyAttack(String ssid, AttackAlertData alertData) {
-        logger.info("Sending attack notifications for SSID: {} | Confidence: {}%", ssid, alertData.getConfidence());
+        logger.info("Sending attack notifications for SSID/BSSID: {} | Confidence: {}%", ssid,
+                alertData.getConfidence());
 
         try {
             // Find all users in the system (admins get all alerts)
@@ -75,14 +77,25 @@ public class AlertNotificationService {
 
             for (User user : allUsers) {
                 boolean isAdmin = user.getRole() == UserRole.ADMIN;
-                boolean isAffected = user.getMacAddress() != null &&
+                boolean isVictim = user.getMacAddress() != null &&
                         (user.getMacAddress().equalsIgnoreCase(alertData.getVictimMac()));
 
-                if (!isAdmin && !isAffected)
-                    continue;
+                // Viewer is affected if they monitor the attacked network BSSID
+                boolean monitorsBssid = false;
+                if (!isAdmin && user.getWifiMappings() != null) {
+                    monitorsBssid = user.getWifiMappings().stream()
+                            .anyMatch(mapping -> mapping.getWifiNetwork() != null
+                                    && mapping.getWifiNetwork().getBssid() != null
+                                    && mapping.getWifiNetwork().getBssid().equalsIgnoreCase(ssid));
+                }
 
-                // Send email
-                if (Boolean.TRUE.equals(user.getAlertsEmail()) && user.getEmail() != null) {
+                if (!isAdmin && !isVictim && !monitorsBssid) {
+                    continue;
+                }
+
+                // Send email (default to true if DB value is null)
+                boolean sendEmail = user.getAlertsEmail() == null || user.getAlertsEmail();
+                if (sendEmail && user.getEmail() != null) {
                     try {
                         sendEmailAlert(user, alertData);
                     } catch (Exception e) {
@@ -90,9 +103,9 @@ public class AlertNotificationService {
                     }
                 }
 
-                // Send SMS
-                if (Boolean.TRUE.equals(user.getAlertsSms()) && user.getPhoneNumber() != null
-                        && !user.getPhoneNumber().isEmpty()) {
+                // Send SMS (default to true if DB value is null)
+                boolean sendSms = user.getAlertsSms() == null || user.getAlertsSms();
+                if (sendSms && user.getPhoneNumber() != null && !user.getPhoneNumber().isEmpty()) {
                     try {
                         sendSmsAlert(user, alertData);
                     } catch (Exception e) {
@@ -112,7 +125,11 @@ public class AlertNotificationService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        helper.setFrom(emailFrom);
+        try {
+            helper.setFrom(new jakarta.mail.internet.InternetAddress(emailFrom, emailFromName, "UTF-8"));
+        } catch (java.io.UnsupportedEncodingException e) {
+            helper.setFrom(emailFrom); // fallback
+        }
         helper.setTo(user.getEmail());
         helper.setSubject("⚠️ WiFi Shield Alert: Deauthentication Attack Detected");
 
@@ -120,7 +137,7 @@ public class AlertNotificationService {
         helper.setText(html, true);
 
         mailSender.send(message);
-        logger.info("Email alert sent to: {}", user.getEmail());
+        logger.info("✅ Email alert sent to: {}", user.getEmail());
     }
 
     /**

@@ -272,6 +272,7 @@ public class AuthService {
                                 .instituteName(institute != null ? institute.getInstituteName() : null)
                                 .instituteCode(institute != null ? institute.getInstituteCode() : null)
                                 .instituteType(institute != null ? institute.getInstituteType().name() : null)
+                                .macAddress(user.getMacAddress())
                                 .message("Login successful")
                                 .build();
         }

@@ -3,12 +3,20 @@ import { useState, useEffect, useCallback } from 'react';
 // Use environment variable or default to localhost:8080
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8080';
 
+export interface SeverityBreakdown {
+    critical: number;
+    high: number;
+    medium: number;
+    low: number;
+}
+
 export interface LiveStatus {
     systemStatus: string;
     activeThreats: number;
     threatsLastHour: number;
     underAttack: boolean;
     timestamp: string;
+    severityBreakdown: SeverityBreakdown;
 }
 
 export function useLiveStatus() {
@@ -17,7 +25,8 @@ export function useLiveStatus() {
         activeThreats: 0,
         threatsLastHour: 0,
         underAttack: false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        severityBreakdown: { critical: 0, high: 0, medium: 0, low: 0 }
     });
     const [lastError, setLastError] = useState<string | null>(null);
 
@@ -26,7 +35,10 @@ export function useLiveStatus() {
             const response = await fetch(`${BACKEND_URL}/api/detection/live-status`);
             if (response.ok) {
                 const data = await response.json();
-                setLiveStatus(data);
+                setLiveStatus({
+                    ...data,
+                    severityBreakdown: data.severityBreakdown || { critical: 0, high: 0, medium: 0, low: 0 }
+                });
                 setLastError(null);
             } else {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -53,3 +65,4 @@ export function useLiveStatus() {
         refresh: fetchLiveStatus
     };
 }
+
