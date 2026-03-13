@@ -52,7 +52,7 @@ DB_CONFIG = {
     "host": os.environ.get("DB_HOST", "mysql-2a681751-supreethvennila69-f64d.e.aivencloud.com"),
     "port": int(os.environ.get("DB_PORT", "23766")),
     "user": os.environ.get("DB_USER", "avnadmin"),
-    "password": os.environ.get("DB_PASSWORD", "AVNS_********"),
+    "password": os.environ.get("DB_PASSWORD", "<YOUR_DB_PASSWORD>"),
     "database": os.environ.get("DB_NAME", "wifi_deauth"),
     "ssl_disabled": False,
 }

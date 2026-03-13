@@ -7,7 +7,7 @@ database:
   host: "mysql-2a681751-supreethvennila69-f64d.e.aivencloud.com"
   port: 23766
   user: "avnadmin"
-  password: "AVNS_********"
+  password: "<YOUR_DB_PASSWORD>"
   name: "wifi_deauth"
   ssl_disabled: false
   connection_timeout: 10

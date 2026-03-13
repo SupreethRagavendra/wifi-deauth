@@ -27,6 +27,10 @@ export interface Alert {
     eventId?: number;
     layer2Score?: number;
     layer3Score?: number;
+    rateAnalyzerScore?: number;
+    seqValidatorScore?: number;
+    timeAnomalyScore?: number;
+    sessionStateScore?: number;
     mlConfidence?: number;
     mlPrediction?: string;
     modelAgreement?: string;

@@ -30,14 +30,14 @@ public class RateAnalyzer {
     private static final int SCORE_ATTACK = 100;
 
     // Thresholds (packets in 10 second window) - Configurable via properties
-    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.normal:2}")
-    private int thresholdNormal;
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.normal:15}")
+    private int thresholdNormal = 15;
 
-    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.suspicious:5}")
-    private int thresholdSlightlySuspicious;
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.suspicious:30}")
+    private int thresholdSlightlySuspicious = 30;
 
-    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.attack:10}")
-    private int thresholdAttack;
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.rate.threshold.attack:100}")
+    private int thresholdAttack = 100;
 
     /**
      * Analyzes Deauth frame rate in the last 5 seconds.

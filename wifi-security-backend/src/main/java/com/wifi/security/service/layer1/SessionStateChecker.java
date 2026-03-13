@@ -38,13 +38,13 @@ public class SessionStateChecker {
     private static final int SCORE_ATTACK = 100;
 
     // Session state analysis thresholds - Configurable
-    @org.springframework.beans.factory.annotation.Value("${detection.layer1.session.mass-deauth-threshold:10}")
-    private int massDeauthThreshold;
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.session.mass-deauth-threshold:3}")
+    private int massDeauthThreshold = 3;
 
     private static final int SESSION_WINDOW_SECONDS = 30; // Longer window for session context
 
-    @org.springframework.beans.factory.annotation.Value("${detection.layer1.session.orphan-deauth-threshold:10}")
-    private int orphanDeauthThreshold;
+    @org.springframework.beans.factory.annotation.Value("${detection.layer1.session.orphan-deauth-threshold:50}")
+    private int orphanDeauthThreshold = 50;
 
     // Frame types for 802.11
     private static final String FRAME_TYPE_DEAUTH = "DEAUTH";
@@ -103,7 +103,7 @@ public class SessionStateChecker {
         // Track session states per MAC
         Map<String, SessionState> sessionStates = new HashMap<>();
         int orphanDeauthCount = 0;
-        int massDeauthVictims = 0;
+        java.util.Set<String> uniqueVictims = new java.util.HashSet<>();
 
         for (CapturedPacket packet : packets) {
             String frameType = normalizeFrameType(packet.getFrameType());
@@ -127,15 +127,15 @@ public class SessionStateChecker {
                     }
                     state.incrementDeauthCount();
 
-                    // Track victims of deauth from the source MAC
-                    if (mac.equals(sourceMac)) {
-                        massDeauthVictims++;
+                    // Track unique victims of deauth from the source MAC
+                    if (mac.equals(sourceMac) && packet.getDestMac() != null) {
+                        uniqueVictims.add(packet.getDestMac());
                     }
                     break;
             }
         }
 
-        return calculateScore(orphanDeauthCount, massDeauthVictims, sessionStates.size());
+        return calculateScore(orphanDeauthCount, uniqueVictims.size(), sessionStates.size());
     }
 
     /**

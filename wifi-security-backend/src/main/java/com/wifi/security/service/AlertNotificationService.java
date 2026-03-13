@@ -23,6 +23,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.IllegalFormatException;
 
 /**
  * Service for sending attack alert notifications via Email (SMTP) and SMS
@@ -62,6 +63,37 @@ public class AlertNotificationService {
 
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
+    // #region agent log
+    private void agentLog(String hypothesisId, String location, String message, String jsonData) {
+        try {
+            String payload = String.format(
+                    "{\"sessionId\":\"9afe89\",\"runId\":\"pre-fix-1\",\"hypothesisId\":\"%s\",\"location\":\"%s\",\"message\":\"%s\",\"data\":%s,\"timestamp\":%d}",
+                    hypothesisId,
+                    location,
+                    message.replace("\"", "'"),
+                    jsonData != null ? jsonData : "{}",
+                    System.currentTimeMillis());
+
+            java.net.URL url = new java.net.URL("http://127.0.0.1:7781/ingest/24b36fd1-0934-4f17-baf9-ad3e553be602");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setConnectTimeout(500);
+            conn.setReadTimeout(500);
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("X-Debug-Session-Id", "9afe89");
+
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                os.write(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+            conn.getResponseCode();
+            conn.disconnect();
+        } catch (Exception ignored) {
+            // Never let debug logging break notifications
+        }
+    }
+    // #endregion
+
     /**
      * Notify all relevant users (admin + affected viewers) about an attack.
      */
@@ -93,6 +125,19 @@ public class AlertNotificationService {
                     continue;
                 }
 
+                // #region agent log
+                agentLog(
+                        "H3",
+                        "AlertNotificationService.java:79",
+                        "notifyAttack evaluating user",
+                        String.format(
+                                "{\"userEmail\":\"%s\",\"isAdmin\":%s,\"isVictim\":%s,\"monitorsBssid\":%s}",
+                                user.getEmail(),
+                                isAdmin,
+                                isVictim,
+                                monitorsBssid));
+                // #endregion
+
                 // Send email (default to true if DB value is null)
                 boolean sendEmail = user.getAlertsEmail() == null || user.getAlertsEmail();
                 if (sendEmail && user.getEmail() != null) {
@@ -100,6 +145,17 @@ public class AlertNotificationService {
                         sendEmailAlert(user, alertData);
                     } catch (Exception e) {
                         logger.error("Email alert failed for {}: {}", user.getEmail(), e.getMessage());
+
+                        // #region agent log
+                        agentLog(
+                                "H3",
+                                "AlertNotificationService.java:100",
+                                "sendEmailAlert failed",
+                                String.format(
+                                        "{\"userEmail\":\"%s\",\"error\":\"%s\"}",
+                                        user.getEmail(),
+                                        e.getMessage() != null ? e.getMessage().replace("\"", "'") : "null"));
+                        // #endregion
                     }
                 }
 
@@ -110,11 +166,32 @@ public class AlertNotificationService {
                         sendSmsAlert(user, alertData);
                     } catch (Exception e) {
                         logger.error("SMS alert failed for {}: {}", user.getPhoneNumber(), e.getMessage());
+
+                        // #region agent log
+                        agentLog(
+                                "H3",
+                                "AlertNotificationService.java:112",
+                                "sendSmsAlert failed",
+                                String.format(
+                                        "{\"phone\":\"%s\",\"error\":\"%s\"}",
+                                        user.getPhoneNumber(),
+                                        e.getMessage() != null ? e.getMessage().replace("\"", "'") : "null"));
+                        // #endregion
                     }
                 }
             }
         } catch (Exception e) {
             logger.error("Failed to send attack notifications: {}", e.getMessage(), e);
+
+            // #region agent log
+            agentLog(
+                    "H3",
+                    "AlertNotificationService.java:117",
+                    "notifyAttack top-level failure",
+                    String.format(
+                            "{\"error\":\"%s\"}",
+                            e.getMessage() != null ? e.getMessage().replace("\"", "'") : "null"));
+            // #endregion
         }
     }
 
@@ -133,7 +210,32 @@ public class AlertNotificationService {
         helper.setTo(user.getEmail());
         helper.setSubject("⚠️ WiFi Shield Alert: Deauthentication Attack Detected");
 
-        String html = buildEmailHtml(user, data);
+        String html;
+        try {
+            // Primary path: rich HTML template
+            html = buildEmailHtml(user, data);
+        } catch (IllegalFormatException fmtEx) {
+            // Some JVMs/libraries are sensitive to '%' in multi-line templates.
+            // Fall back to a minimal but safe HTML body instead of failing.
+            logger.error("Failed to build HTML alert template, using fallback body: {}", fmtEx.getMessage());
+            html = "<html><body>"
+                    + "<h2>WiFi Shield Attack Alert</h2>"
+                    + "<p>Hi " + escape(user.getName()) + ",</p>"
+                    + "<p>A deauthentication attack has been detected on your network.</p>"
+                    + "<ul>"
+                    + "<li><strong>Attacker MAC:</strong> " + escape(data.getAttackerMac()) + "</li>"
+                    + "<li><strong>Victim MAC:</strong> " + escape(data.getVictimMac()) + "</li>"
+                    + "<li><strong>SSID/BSSID:</strong> " + escape(data.getSsid()) + "</li>"
+                    + "<li><strong>Channel:</strong> " + escape(data.getChannel() != null ? data.getChannel() : "N/A")
+                    + "</li>"
+                    + String.format("<li><strong>Confidence:</strong> %.1f%%</li>", data.getConfidence())
+                    + "<li><strong>Defense Level:</strong> " + escape(data.getDefenseLevel()) + "</li>"
+                    + "<li><strong>Time:</strong> " + escape(data.getTimestamp()) + "</li>"
+                    + "</ul>"
+                    + "<p>Please check your WiFi Shield dashboard for full details.</p>"
+                    + "</body></html>";
+        }
+
         helper.setText(html, true);
 
         mailSender.send(message);
@@ -230,5 +332,19 @@ public class AlertNotificationService {
                         data.getChannel() != null ? data.getChannel() : "N/A",
                         data.getDefenseLevel(),
                         data.getTimestamp());
+    }
+
+    /**
+     * Simple HTML-escape for fallback body (enough for this use-case).
+     */
+    private String escape(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 }

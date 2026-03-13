@@ -38,6 +38,12 @@ public class AlertDTO {
     private String mlPrediction;
     private String modelAgreement;
 
+    // Layer 1 Sub-scores
+    private Integer rateAnalyzerScore;
+    private Integer seqValidatorScore;
+    private Integer timeAnomalyScore;
+    private Integer sessionStateScore;
+
     // ── RSSI Attacker Identification fields ──────────────────────────
     private String realAttackerMac;
     private Integer attackerConfidence;

@@ -108,6 +108,37 @@ public class DetectionService {
         return 0;
     }
 
+    // #region agent log
+    private void agentLog(String hypothesisId, String location, String message, String jsonData) {
+        try {
+            String payload = String.format(
+                    "{\"sessionId\":\"9afe89\",\"runId\":\"pre-fix-1\",\"hypothesisId\":\"%s\",\"location\":\"%s\",\"message\":\"%s\",\"data\":%s,\"timestamp\":%d}",
+                    hypothesisId,
+                    location,
+                    message.replace("\"", "'"),
+                    jsonData != null ? jsonData : "{}",
+                    System.currentTimeMillis());
+
+            java.net.URL url = new java.net.URL("http://127.0.0.1:7781/ingest/24b36fd1-0934-4f17-baf9-ad3e553be602");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setConnectTimeout(500);
+            conn.setReadTimeout(500);
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("X-Debug-Session-Id", "9afe89");
+
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                os.write(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+            conn.getResponseCode(); // trigger send
+            conn.disconnect();
+        } catch (Exception ignored) {
+            // Never let debug logging break detection
+        }
+    }
+    // #endregion
+
     public void processPacket(DeauthPacketDTO packet) {
         processBatch(Collections.singletonList(packet));
     }
@@ -124,7 +155,15 @@ public class DetectionService {
         if (validPackets.isEmpty())
             return;
 
-        totalPacketCount.addAndGet(validPackets.size());
+        long newTotal = totalPacketCount.addAndGet(validPackets.size());
+
+        // #region agent log
+        agentLog(
+                "H1",
+                "DetectionService.java:127",
+                "Processed deauth batch",
+                String.format("{\"batchSize\":%d,\"totalPackets\":%d}", validPackets.size(), newTotal));
+        // #endregion
 
         // Update in-memory recent packets
         recentPackets.addAll(validPackets);
@@ -291,24 +330,28 @@ public class DetectionService {
                         preBonus, totalBonus, finalScore, burstBonus, rssiBoost, packet.getSrc());
             }
 
+            boolean isDeauth = "DEAUTH".equalsIgnoreCase(request.getFrameType());
+            int reason = packet.getReason();
+            boolean isNormalDisconnect = isDeauth && (reason == 3 || reason == 8);
+
             // ── Deauth frame floor (reason-code-aware) ────────────────
             // Normal disconnects (reason 3 = STA leaving, reason 8 = disassociated)
             // should be allowed to score LOW. All other deauth frames get a
             // minimum score of 15 (MEDIUM) since they're suspicious by default.
-            if ("DEAUTH".equalsIgnoreCase(request.getFrameType())) {
-                int reason = packet.getReason();
-                boolean isNormalDisconnect = (reason == 3 || reason == 8);
-                if (!isNormalDisconnect) {
-                    finalScore = Math.max(finalScore, 15);
-                }
-                // Normal disconnects: no floor — allow score to stay at natural level (possibly
-                // 0 → LOW)
+            if (isDeauth && !isNormalDisconnect) {
+                finalScore = Math.max(finalScore, 15);
             }
 
             // ── Safety floor: use normalized L1 (not raw) ─────────────────
             // Prevents weighted average from dropping below strong L1 signal
+            // BUT for normal disconnects we deliberately skip this so they can stay LOW.
             double normL1Floor = Math.min(100.0, (response.getCombinedScore() / 95.0) * 100.0);
-            finalScore = Math.max(finalScore, (int) Math.round(normL1Floor));
+            if (!isNormalDisconnect) {
+                finalScore = Math.max(finalScore, (int) Math.round(normL1Floor));
+            } else {
+                // Clamp explicitly into LOW band for clearly benign disconnects
+                finalScore = Math.min(finalScore, 10);
+            }
 
             // Recompute threat level based on the final weighted score
             // (the original L1 threat level may be stale after ML & L3 boosting)
@@ -590,6 +633,18 @@ public class DetectionService {
         if (attacking) {
             status.put("attackDetails", getActiveAttackDetails());
         }
+
+        // #region agent log
+        agentLog(
+                "H2",
+                "DetectionService.java:580",
+                "getCurrentStatus snapshot",
+                String.format(
+                        "{\"attacking\":%s,\"totalPackets\":%d,\"totalThreats\":%d}",
+                        attacking,
+                        totalPacketCount.get(),
+                        totalThreatsDetected.get()));
+        // #endregion
 
         return status;
     }

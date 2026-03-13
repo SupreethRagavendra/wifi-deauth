@@ -87,7 +87,12 @@ export const DetectionMonitor: React.FC = () => {
                     mlPrediction: e.mlPrediction,
                     isSpoofed: e.isSpoofed,
                     realAttackerMac: e.realAttackerMac,
-                    message: e.layer3Notes || `Threat detected from ${e.attackerMac}`
+                    message: e.layer3Notes || `Threat detected from ${e.attackerMac}`,
+                    layer1Score: e.layer1Score || 0,
+                    rateAnalyzerScore: e.rateAnalyzerScore || 0,
+                    seqValidatorScore: e.seqValidatorScore || 0,
+                    timeAnomalyScore: e.timeAnomalyScore || 0,
+                    sessionStateScore: e.sessionStateScore || 0
                 }));
 
                 setEvents(mappedEvents);
@@ -118,6 +123,10 @@ export const DetectionMonitor: React.FC = () => {
                 totalScore: latestAlert.score || 0,
                 layer2Score: latestAlert.layer2Score || 0,
                 layer3Score: latestAlert.layer3Score || 0,
+                rateAnalyzerScore: latestAlert.rateAnalyzerScore || 0,
+                seqValidatorScore: latestAlert.seqValidatorScore || 0,
+                timeAnomalyScore: latestAlert.timeAnomalyScore || 0,
+                sessionStateScore: latestAlert.sessionStateScore || 0,
                 mlConfidence: latestAlert.mlConfidence || 0,
                 mlPrediction: latestAlert.mlPrediction || 'N/A',
                 modelAgreement: latestAlert.modelAgreement || '0/4',

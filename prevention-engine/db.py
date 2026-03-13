@@ -33,7 +33,7 @@ DB_CONFIG = {
     "host":               os.getenv("DB_HOST",     _db_cfg.get("host", "mysql-2a681751-supreethvennila69-f64d.e.aivencloud.com")),
     "port":               int(os.getenv("DB_PORT", str(_db_cfg.get("port", 23766)))),
     "user":               os.getenv("DB_USERNAME", _db_cfg.get("user", "avnadmin")),
-    "password":           os.getenv("DB_PASSWORD", _db_cfg.get("password", "AVNS_********")),
+    "password":           os.getenv("DB_PASSWORD", _db_cfg.get("password", "<YOUR_DB_PASSWORD>")),
     "database":           os.getenv("DB_NAME",     _db_cfg.get("name", "wifi_deauth")),
     "ssl_ca":             None,
     "ssl_disabled":       _db_cfg.get("ssl_disabled", False),

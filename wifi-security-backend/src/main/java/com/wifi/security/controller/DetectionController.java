@@ -157,6 +157,42 @@ public class DetectionController {
                 "low", lowCount,
                 "normal", 0));
 
+        // #region agent log
+        try {
+            String jsonData = String.format(
+                    "{\"activeThreats\":%d,\"threatsLastHour\":%d,\"critical\":%d,\"high\":%d,\"medium\":%d,\"low\":%d,\"underAttack\":%s}",
+                    activeThreats,
+                    threatsLastHour,
+                    criticalCount,
+                    highCount,
+                    mediumCount,
+                    lowCount,
+                    underAttack);
+
+            String payload = String.format(
+                    "{\"sessionId\":\"9afe89\",\"runId\":\"pre-fix-1\",\"hypothesisId\":\"H2\",\"location\":\"DetectionController.java:104\",\"message\":\"live-status computed\",\"data\":%s,\"timestamp\":%d}",
+                    jsonData,
+                    System.currentTimeMillis());
+
+            java.net.URL url = new java.net.URL("http://127.0.0.1:7781/ingest/24b36fd1-0934-4f17-baf9-ad3e553be602");
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setConnectTimeout(500);
+            conn.setReadTimeout(500);
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("X-Debug-Session-Id", "9afe89");
+
+            try (java.io.OutputStream os = conn.getOutputStream()) {
+                os.write(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+            conn.getResponseCode();
+            conn.disconnect();
+        } catch (Exception ignored) {
+            // do not break endpoint on debug log failure
+        }
+        // #endregion
+
         return ResponseEntity.ok(result);
     }
 
